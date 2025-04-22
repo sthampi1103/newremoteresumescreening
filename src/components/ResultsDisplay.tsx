@@ -15,10 +15,10 @@ import {useEffect, useState} from "react";
 interface ResultsDisplayProps {
   jobDescription: string;
   resumesText: string;
+  setResults: (results: any[]) => void; // Function to set results state in parent
 }
 
-const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ jobDescription, resumesText }) => {
-  const [results, setResults] = useState<any[]>([]);
+const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ jobDescription, resumesText, setResults }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ jobDescription, resumes
       try {
         const resumesArray = resumesText.split('\n').filter(text => text.trim() !== '');
         const apiResults = await rankResumes({ jobDescription: jobDescription, resumes: resumesArray });
-        setResults(apiResults);
+        setResults(apiResults); // Update the results state in the parent
       } catch (error) {
         console.error("Error fetching data:", error);
         // Handle error appropriately
@@ -39,11 +39,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ jobDescription, resumes
     if (jobDescription && resumesText) {
       fetchData();
     }
-  }, [jobDescription, resumesText]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  }, [jobDescription, resumesText, setResults]);
 
   return (
     <Table>
