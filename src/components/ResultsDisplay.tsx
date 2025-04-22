@@ -20,6 +20,7 @@ interface ResultsDisplayProps {
 
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ jobDescription, resumesText, setResults }) => {
   const [loading, setLoading] = useState(true);
+  const [results, setResultsInternal] = useState<any[]>([]); // Initialize with an empty array
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,6 +29,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ jobDescription, resumes
         const resumesArray = resumesText.split('\n').filter(text => text.trim() !== '');
         const apiResults = await rankResumes({ jobDescription: jobDescription, resumes: resumesArray });
         setResults(apiResults); // Update the results state in the parent
+        setResultsInternal(apiResults); // Also update the local state
       } catch (error) {
         console.error("Error fetching data:", error);
         // Handle error appropriately
@@ -55,18 +57,28 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ jobDescription, resumes
         </TableRow>
       </TableHeader>
       <TableBody>
-        {results.map((result, index) => (
-          <TableRow key={index}>
-            <TableCell>{result.name}</TableCell>
-            <TableCell>{result.summary}</TableCell>
-            <TableCell>{result.score}</TableCell>
-            <TableCell>{result.rationale}</TableCell>
-            <TableCell>
-              Essential Skills: {result.breakdown.essentialSkillsMatch}, Experience: {result.breakdown.relevantExperience}, Qualifications: {result.breakdown.requiredQualifications}, Keywords: {result.breakdown.keywordPresence}
-            </TableCell>
-            <TableCell>{result.recommendation}</TableCell>
+        {loading ? (
+          <TableRow>
+            <TableCell colSpan={6} className="text-center">Loading...</TableCell>
           </TableRow>
-        ))}
+        ) : results.length > 0 ? ( // Conditionally render the table based on results
+          results.map((result, index) => (
+            <TableRow key={index}>
+              <TableCell>{result.name}</TableCell>
+              <TableCell>{result.summary}</TableCell>
+              <TableCell>{result.score}</TableCell>
+              <TableCell>{result.rationale}</TableCell>
+              <TableCell>
+                Essential Skills: {result.breakdown.essentialSkillsMatch}, Experience: {result.breakdown.relevantExperience}, Qualifications: {result.breakdown.requiredQualifications}, Keywords: {result.breakdown.keywordPresence}
+              </TableCell>
+              <TableCell>{result.recommendation}</TableCell>
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell colSpan={6} className="text-center">No results to display.</TableCell>
+          </TableRow>
+        )}
       </TableBody>
     </Table>
   );
