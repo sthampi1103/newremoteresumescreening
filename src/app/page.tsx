@@ -12,6 +12,7 @@ export default function Home() {
   const [jobDescription, setJobDescription] = useState('');
   const [resumesText, setResumesText] = useState('');
   const [start, setStart] = useState(false);
+  const [isValid, setIsValid] = useState(false);
 
   const handleStart = (jd: string, resumes: string) => {
     setJobDescription(jd);
@@ -22,7 +23,9 @@ export default function Home() {
   const handleReset = () => {
     // Implement reset logic here, clear inputs, etc.
     setStart(false);
-    window.location.reload(); // quick reset
+    setIsValid(false);
+    setResumesText('');
+    setJobDescription('');
   };
 
   return (
@@ -41,7 +44,7 @@ export default function Home() {
           <CardTitle>Resume Upload</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResumeUpload onResumesChange={(resumes) => setResumesText(resumes)} onStart={handleStart} jobDescription={jobDescription}/>
+          <ResumeUpload onResumesChange={(resumes) => setResumesText(resumes)} onStart={handleStart} jobDescription={jobDescription} setValid={setIsValid}/>
         </CardContent>
       </Card>
 
@@ -58,11 +61,13 @@ export default function Home() {
         </Card>
       )}
        <div className="flex justify-end space-x-4">
-          <Button onClick={handleReset} variant="outline" disabled={!start}>
+          <Button onClick={handleReset} variant="outline" disabled={!start && !jobDescription && !resumesText ? true : false}>
             Reset
+          </Button>
+          <Button onClick={handleStart} className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={!jobDescription || !resumesText || !isValid}>
+            Start
           </Button>
         </div>
     </div>
   );
 }
-

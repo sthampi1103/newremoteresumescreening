@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -10,12 +10,19 @@ interface ResumeUploadProps {
   onResumesChange: (resumes: string) => void;
   onStart: (jd: string, resumes: string) => void;
   jobDescription: string;
+  setValid: (valid: boolean) => void;
 }
 
-const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, jobDescription }) => {
+const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, jobDescription, setValid }) => {
   const [resumes, setResumes] = useState<File[]>([]);
   const [resumeText, setResumeText] = useState('');
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Validate if resumes are present (either uploaded or typed in)
+    const isValid = resumes.length > 0 || (resumeText !== '' && resumeText.trim() !== '');
+    setValid(isValid);
+  }, [resumes, resumeText, setValid]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -75,7 +82,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
       });
       return;
     }
-    if (!resumeText) {
+    if (!resumeText && resumes.length === 0) {
        toast({
          title: "Error",
          description: "Please upload resume(s) before starting.",
@@ -85,7 +92,6 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
     }
     onStart(jobDescription, resumeText); // Notify parent component
   };
-
 
   return (
     <div>
@@ -117,12 +123,8 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
         onChange={handleTextChange}
         className="mb-4"
       />
-      <Button onClick={handleStartClick} className="bg-accent text-accent-foreground hover:bg-accent/90">
-        Start
-      </Button>
     </div>
   );
 };
 
 export default ResumeUpload;
-
