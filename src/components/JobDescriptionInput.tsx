@@ -6,7 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
 
-const JobDescriptionInput = () => {
+interface JobDescriptionInputProps {
+  onJDChange: (jd: string) => void;
+}
+
+const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange }) => {
   const [jobDescription, setJobDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -14,6 +18,7 @@ const JobDescriptionInput = () => {
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setJobDescription(e.target.value);
+    onJDChange(e.target.value); // Notify parent component
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,6 +38,7 @@ const JobDescriptionInput = () => {
       try {
         const fileContent = await readFileContent(selectedFile);
         setJobDescription(fileContent);
+        onJDChange(fileContent); // Notify parent component
       } catch (error) {
         console.error("Error reading file:", error);
         setErrorMessage("Failed to read the file. Please try again.");
@@ -107,3 +113,4 @@ const JobDescriptionInput = () => {
 };
 
 export default JobDescriptionInput;
+

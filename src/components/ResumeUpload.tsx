@@ -6,7 +6,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
 
-const ResumeUpload = () => {
+interface ResumeUploadProps {
+  onResumesChange: (resumes: string) => void;
+  onStart: (jd: string, resumes: string) => void;
+  jobDescription: string;
+}
+
+const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, jobDescription }) => {
   const [resumes, setResumes] = useState<File[]>([]);
   const [resumeText, setResumeText] = useState('');
   const { toast } = useToast();
@@ -30,8 +36,9 @@ const ResumeUpload = () => {
     }
 
     setResumes(files);
-    // You might want to do something with the fileTexts, like store them in state
-    setResumeText(fileTexts.join('\n')); // This adds all resumes to the textarea
+    const allResumesText = fileTexts.join('\n');
+    setResumeText(allResumesText);
+    onResumesChange(allResumesText); // Notify parent component
   };
 
   const readFileContent = (file: File): Promise<string> => {
@@ -56,7 +63,29 @@ const ResumeUpload = () => {
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setResumeText(e.target.value);
+    onResumesChange(e.target.value); // Notify parent component
   };
+
+  const handleStartClick = () => {
+    if (!jobDescription) {
+      toast({
+        title: "Error",
+        description: "Please enter a job description before starting.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!resumeText) {
+       toast({
+         title: "Error",
+         description: "Please upload resume(s) before starting.",
+         variant: "destructive",
+       });
+       return;
+    }
+    onStart(jobDescription, resumeText); // Notify parent component
+  };
+
 
   return (
     <div>
@@ -88,8 +117,12 @@ const ResumeUpload = () => {
         onChange={handleTextChange}
         className="mb-4"
       />
+      <Button onClick={handleStartClick} className="bg-accent text-accent-foreground hover:bg-accent/90">
+        Start
+      </Button>
     </div>
   );
 };
 
 export default ResumeUpload;
+

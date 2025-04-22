@@ -9,37 +9,41 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {rankResumes} from "@/ai/flows/rank-resumes";
+import {useEffect, useState} from "react";
 
-const ResultsDisplay = () => {
-  // Placeholder data for demonstration
-  const results = [
-    {
-      name: 'John Doe',
-      summary: 'Experienced software engineer with a focus on web development.',
-      score: 85,
-      rationale: 'Strong skills match and relevant experience.',
-      breakdown: {
-        essentialSkillsMatch: 90,
-        relevantExperience: 80,
-        requiredQualifications: 100,
-        keywordPresence: 70,
-      },
-      recommendation: 'Strong Match - Shortlist for interview',
-    },
-    {
-      name: 'Jane Smith',
-      summary: 'Recent graduate with internship experience in data analysis.',
-      score: 60,
-      rationale: 'Lacks required experience but has a good skills match.',
-      breakdown: {
-        essentialSkillsMatch: 75,
-        relevantExperience: 40,
-        requiredQualifications: 80,
-        keywordPresence: 45,
-      },
-      recommendation: 'Moderate Match - Further review needed',
-    },
-  ];
+interface ResultsDisplayProps {
+  jobDescription: string;
+  resumesText: string;
+}
+
+const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ jobDescription, resumesText }) => {
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const resumesArray = resumesText.split('\n').filter(text => text.trim() !== '');
+        const apiResults = await rankResumes({ jobDescription: jobDescription, resumes: resumesArray });
+        setResults(apiResults);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        // Handle error appropriately
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (jobDescription && resumesText) {
+      fetchData();
+    }
+  }, [jobDescription, resumesText]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Table>
@@ -55,8 +59,8 @@ const ResultsDisplay = () => {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {results.map((result) => (
-          <TableRow key={result.name}>
+        {results.map((result, index) => (
+          <TableRow key={index}>
             <TableCell>{result.name}</TableCell>
             <TableCell>{result.summary}</TableCell>
             <TableCell>{result.score}</TableCell>

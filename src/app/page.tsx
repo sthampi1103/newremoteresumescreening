@@ -9,9 +9,13 @@ import {Button} from '@/components/ui/button';
 import {useState} from 'react';
 
 export default function Home() {
+  const [jobDescription, setJobDescription] = useState('');
+  const [resumesText, setResumesText] = useState('');
   const [start, setStart] = useState(false);
 
-  const handleStart = () => {
+  const handleStart = (jd: string, resumes: string) => {
+    setJobDescription(jd);
+    setResumesText(resumes);
     setStart(true);
   };
 
@@ -28,7 +32,7 @@ export default function Home() {
           <CardTitle>Job Description</CardTitle>
         </CardHeader>
         <CardContent>
-          <JobDescriptionInput />
+          <JobDescriptionInput onJDChange={(jd) => setJobDescription(jd)} />
         </CardContent>
       </Card>
 
@@ -37,18 +41,9 @@ export default function Home() {
           <CardTitle>Resume Upload</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResumeUpload />
+          <ResumeUpload onResumesChange={(resumes) => setResumesText(resumes)} onStart={handleStart} jobDescription={jobDescription}/>
         </CardContent>
       </Card>
-
-      <div className="flex justify-end space-x-4">
-        <Button onClick={handleStart} disabled={start} className="bg-accent text-accent-foreground hover:bg-accent/90">
-          Start
-        </Button>
-        <Button onClick={handleReset} variant="outline" disabled={start}>
-          Reset
-        </Button>
-      </div>
 
       <Separator className="my-5" />
 
@@ -58,10 +53,15 @@ export default function Home() {
             <CardTitle>Results</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResultsDisplay />
+            <ResultsDisplay jobDescription={jobDescription} resumesText={resumesText} />
           </CardContent>
         </Card>
       )}
+       <div className="flex justify-end space-x-4">
+          <Button onClick={handleReset} variant="outline" disabled={!start}>
+            Reset
+          </Button>
+        </div>
     </div>
   );
 }
