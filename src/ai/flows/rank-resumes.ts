@@ -1,4 +1,3 @@
-// This is a server-side file.
 'use server';
 /**
  * @fileOverview Ranks resumes based on their fit to a job description.
@@ -94,7 +93,7 @@ Provide the output in a JSON format with the following columns:
 * summary: A summary of the resume.
 * score: The overall score of the resume (out of 100).
 * rationale: Explanation of the score, highlighting strengths and weaknesses with specific examples from the resume.
-* breakdown: Breakdown of the score based on the scoring factors (essentialSkillsMatch, relevantExperience, requiredQualifications, keywordPresence).
+* breakdown: Breakdown of the score based on the scoring factors (essentialSkillsMatch, relevantExperience, requiredQualifications, keywordPresence). The scores should be proportional to their weight
 * recommendation: Recommendation (Strong Match/Moderate Match/Weak Match) and suggested next steps.
 `,
 });
