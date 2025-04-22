@@ -7,7 +7,7 @@ import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Separator} from '@/components/ui/separator';
 import {Button} from '@/components/ui/button';
 import {useState} from 'react';
-import { utils, writeFile } from 'xlsx';
+import * as ExcelJS from 'exceljs';
 
 export default function Home() {
   const [jobDescription, setJobDescription] = useState('');
@@ -32,34 +32,59 @@ export default function Home() {
     setResults([]); // Clear the results
   };
 
-    const handleDownloadCSV = () => {
-        // Check if there are results to download
+    const handleDownloadExcel = async () => {
         if (!results || results.length === 0) {
             alert('No results to download.');
             return;
         }
 
-        // Convert results array to array of objects
-        const data = results.map(result => ({
-            Name: result.name,
-            Summary: result.summary,
-            Score: result.score,
-            Rationale: result.rationale,
-            EssentialSkills: result.breakdown.essentialSkillsMatch,
-            Experience: result.breakdown.relevantExperience,
-            Qualifications: result.breakdown.requiredQualifications,
-            Keywords: result.breakdown.keywordPresence,
-            Recommendation: result.recommendation
-        }));
-
         // Create a new workbook
-        const wb = utils.book_new();
-        // Convert the data to a worksheet
-        const ws = utils.json_to_sheet(data);
-        // Append the worksheet to the workbook
-        utils.book_append_sheet(wb, ws, 'Resume Rankings');
-        // Generate the CSV file
-        writeFile(wb, 'resume_rankings.csv');
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Resume Rankings');
+
+        // Define columns
+        worksheet.columns = [
+            { header: 'Name', key: 'name', width: 20 },
+            { header: 'Summary', key: 'summary', width: 30 },
+            { header: 'Score', key: 'score', width: 10 },
+            { header: 'Rationale', key: 'rationale', width: 40 },
+            { header: 'Essential Skills', key: 'essentialSkillsMatch', width: 15 },
+            { header: 'Experience', key: 'relevantExperience', width: 15 },
+            { header: 'Qualifications', key: 'requiredQualifications', width: 15 },
+            { header: 'Keywords', key: 'keywordPresence', width: 10 },
+            { header: 'Recommendation', key: 'recommendation', width: 20 }
+        ];
+
+        // Add rows
+        results.forEach(result => {
+            worksheet.addRow({
+                name: result.name,
+                summary: result.summary,
+                score: result.score,
+                rationale: result.rationale,
+                essentialSkillsMatch: result.breakdown.essentialSkillsMatch,
+                relevantExperience: result.breakdown.relevantExperience,
+                requiredQualifications: result.breakdown.requiredQualifications,
+                keywordPresence: result.breakdown.keywordPresence,
+                recommendation: result.recommendation
+            });
+        });
+
+        // Generate Excel file as ArrayBuffer
+        const buffer = await workbook.xlsx.writeBuffer();
+
+        // Create a Blob from the ArrayBuffer
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+        // Create a link and trigger the download
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'resume_rankings.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
     };
 
   return (
@@ -102,12 +127,13 @@ export default function Home() {
             Start
           </Button>
               {start && (
-                  <Button onClick={handleDownloadCSV} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                      Download CSV
+                  <Button onClick={handleDownloadExcel} className="bg-primary text-primary-foreground hover:bg-primary/90">
+                      Download XLS
                   </Button>
               )}
         </div>
     </div>
   );
 }
+
 
