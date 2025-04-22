@@ -4,20 +4,22 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { useToast } from "@/hooks/use-toast";
 
 const JobDescriptionInput = () => {
   const [jobDescription, setJobDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const { toast } = useToast();
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setJobDescription(e.target.value);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
+
     if (selectedFile) {
-      // Basic file type validation
       if (!['application/pdf', 'application/msword', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(selectedFile.type)) {
         setErrorMessage('Invalid file type. Please upload a PDF, DOCX, DOC, or TXT file.');
         setFile(null);
@@ -26,7 +28,42 @@ const JobDescriptionInput = () => {
 
       setFile(selectedFile);
       setErrorMessage('');
+
+      // Read the file content
+      try {
+        const fileContent = await readFileContent(selectedFile);
+        setJobDescription(fileContent);
+      } catch (error) {
+        console.error("Error reading file:", error);
+        setErrorMessage("Failed to read the file. Please try again.");
+        toast({
+          title: "Error",
+          description: "Failed to read the job description file.",
+          variant: "destructive",
+        });
+        setFile(null);
+      }
     }
+  };
+
+  const readFileContent = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        if (event.target && typeof event.target.result === 'string') {
+          resolve(event.target.result);
+        } else {
+          reject(new Error("Failed to read file content"));
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error("Failed to read the file"));
+      };
+
+      reader.readAsText(file);
+    });
   };
 
   const handleJDInputComplete = () => {

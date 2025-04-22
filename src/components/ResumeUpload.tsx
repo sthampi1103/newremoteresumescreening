@@ -4,14 +4,54 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { useToast } from "@/hooks/use-toast";
 
 const ResumeUpload = () => {
   const [resumes, setResumes] = useState<File[]>([]);
   const [resumeText, setResumeText] = useState('');
+  const { toast } = useToast();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setResumes((prevResumes) => [...prevResumes, ...files]);
+    const fileTexts: string[] = [];
+
+    for (const file of files) {
+      try {
+        const fileContent = await readFileContent(file);
+        fileTexts.push(fileContent);
+      } catch (error) {
+        console.error("Error reading file:", error);
+        toast({
+          title: "Error",
+          description: `Failed to read the file ${file.name}.`,
+          variant: "destructive",
+        });
+      }
+    }
+
+    setResumes(files);
+    // You might want to do something with the fileTexts, like store them in state
+    setResumeText(fileTexts.join('\n')); // This adds all resumes to the textarea
+  };
+
+  const readFileContent = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        if (event.target && typeof event.target.result === 'string') {
+          resolve(event.target.result);
+        } else {
+          reject(new Error("Failed to read file content"));
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error("Failed to read the file"));
+      };
+
+      reader.readAsText(file);
+    });
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
