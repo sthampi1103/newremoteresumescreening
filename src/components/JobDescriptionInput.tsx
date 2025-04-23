@@ -75,10 +75,6 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
     });
   };
 
-  const handleJDInputComplete = () => {
-    // Implement any logic needed when the JD input is complete
-    console.log('Job description input complete');
-  };
 
   const handleReset = () => {
     setJobDescription('');
@@ -119,9 +115,6 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
 
       {errorMessage && <p className="text-red-500">{errorMessage}</p>}
 
-      <Button onClick={handleJDInputComplete} className="bg-accent text-accent-foreground hover:bg-accent/90">
-        JD Input Complete
-      </Button>
        <Button onClick={handleReset} variant="outline">
                 Clear
             </Button>
@@ -130,3 +123,4 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
 };
 
 export default JobDescriptionInput;
+
