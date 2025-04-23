@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -8,13 +8,16 @@ import { useToast } from "@/hooks/use-toast";
 
 interface JobDescriptionInputProps {
   onJDChange: (jd: string) => void;
+  onReset: () => void;
 }
 
-const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange }) => {
+const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, onReset }) => {
   const [jobDescription, setJobDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setJobDescription(e.target.value);
@@ -77,6 +80,16 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange })
     console.log('Job description input complete');
   };
 
+  const handleReset = () => {
+    setJobDescription('');
+    setFile(null);
+      if (fileInputRef.current) {
+          fileInputRef.current.value = ''; // Reset the file input
+      }
+    setErrorMessage('');
+    onJDChange(''); // Notify parent component
+  };
+
   return (
     <div>
       <Textarea
@@ -92,6 +105,7 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange })
           accept=".pdf,.docx,.doc,.txt"
           onChange={handleFileChange}
           id="jobDescriptionFile"
+            ref={fileInputRef}
           className="hidden"
         />
         <label
@@ -108,9 +122,11 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange })
       <Button onClick={handleJDInputComplete} className="bg-accent text-accent-foreground hover:bg-accent/90">
         JD Input Complete
       </Button>
+       <Button onClick={handleReset} variant="outline">
+                Clear
+            </Button>
     </div>
   );
 };
 
 export default JobDescriptionInput;
-

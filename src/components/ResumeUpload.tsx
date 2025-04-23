@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -11,12 +11,14 @@ interface ResumeUploadProps {
   onStart: (jd: string, resumes: string) => void;
   jobDescription: string;
   setValid: (valid: boolean) => void;
+    onReset: () => void;
 }
 
-const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, jobDescription, setValid }) => {
+const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, jobDescription, setValid, onReset }) => {
   const [resumes, setResumes] = useState<File[]>([]);
   const [resumeText, setResumeText] = useState('');
   const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Validate if resumes are present (either uploaded or typed in)
@@ -73,6 +75,16 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
     onResumesChange(e.target.value); // Notify parent component
   };
 
+    const handleReset = () => {
+        setResumes([]);
+        setResumeText('');
+        onResumesChange(''); // Notify parent component
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''; // Reset the file input
+        }
+
+    };
+
   const handleStartClick = () => {
     if (!jobDescription) {
       toast({
@@ -103,6 +115,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
           onChange={handleFileChange}
           id="resumeFiles"
           className="hidden"
+            ref={fileInputRef}
         />
         <label
           htmlFor="resumeFiles"
@@ -123,9 +136,11 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
         onChange={handleTextChange}
         className="mb-4"
       />
+        <Button onClick={handleReset} variant="outline">
+            Clear
+        </Button>
     </div>
   );
 };
 
 export default ResumeUpload;
-

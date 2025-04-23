@@ -94,7 +94,7 @@ export default function Home() {
           <CardTitle>Job Description</CardTitle>
         </CardHeader>
         <CardContent>
-          <JobDescriptionInput onJDChange={(jd) => setJobDescription(jd)} />
+          <JobDescriptionInput onJDChange={(jd) => setJobDescription(jd)} onReset={handleReset}/>
         </CardContent>
       </Card>
 
@@ -103,7 +103,7 @@ export default function Home() {
           <CardTitle>Resume Upload</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResumeUpload onResumesChange={(resumes) => setResumesText(resumes)} onStart={handleStart} jobDescription={jobDescription} setValid={setIsValid}/>
+          <ResumeUpload onResumesChange={(resumes) => setResumesText(resumes)} onStart={handleStart} jobDescription={jobDescription} setValid={setIsValid} onReset={handleReset}/>
         </CardContent>
       </Card>
 
@@ -135,5 +135,3 @@ export default function Home() {
     </div>
   );
 }
-
-
