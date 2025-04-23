@@ -88,13 +88,6 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
 
   return (
     <div>
-      <Textarea
-        placeholder="Enter job description here..."
-        value={jobDescription}
-        onChange={handleTextChange}
-        className="mb-4"
-      />
-
       <div className="flex items-center space-x-4 mb-4">
         <Input
           type="file"
@@ -112,6 +105,13 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
         </label>
         {file && <span className="text-sm">Selected file: {file.name}</span>}
       </div>
+      <Textarea
+        placeholder="Enter job description here..."
+        value={jobDescription}
+        onChange={handleTextChange}
+        className="mb-4"
+      />
+
 
       {errorMessage && <p className="text-red-500">{errorMessage}</p>}
 
@@ -123,4 +123,3 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
 };
 
 export default JobDescriptionInput;
-
