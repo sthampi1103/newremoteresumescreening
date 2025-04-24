@@ -6,7 +6,7 @@ import ResultsDisplay from '@/components/ResultsDisplay';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Separator} from '@/components/ui/separator';
 import {Button} from '@/components/ui/button';
-import {useState} from 'react';
+import {useState, useRef} from 'react';
 import * as ExcelJS from 'exceljs';
 
 export default function Home() {
@@ -15,6 +15,9 @@ export default function Home() {
   const [start, setStart] = useState(false);
   const [isValid, setIsValid] = useState(false);
   const [results, setResults] = useState([]);
+  const [bannerImage, setBannerImage] = useState('https://picsum.photos/100/100'); // Default image
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State to track whether to clear the JobDescriptionInput and ResumeUpload
   const [clearJD, setClearJD] = useState(false);
@@ -44,6 +47,21 @@ export default function Home() {
 
   const resetClearResumes = () => {
     setClearResumes(false);
+  };
+
+  const handleBannerImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleBannerImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBannerImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
 
@@ -105,11 +123,19 @@ export default function Home() {
   return (
     <div className="container mx-auto py-10">
       <div className="text-center mb-8">
+        <input
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={handleBannerImageChange}
+          ref={fileInputRef}
+        />
         <img
-          src="https://picsum.photos/100/100" // Replace with your logo URL
+          src={bannerImage}
           alt="Resume Screening App Logo"
-          className="mx-auto mb-4 rounded-full"
-          style={{width: '100px', height: '100px', objectFit: 'cover'}}
+          className="mx-auto mb-4 rounded-full cursor-pointer"
+          style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+          onClick={handleBannerImageClick}
         />
         <h1 className="text-3xl font-semibold">Resume Screening App</h1>
       </div>
