@@ -6,7 +6,7 @@ import ResultsDisplay from '@/components/ResultsDisplay';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Separator} from '@/components/ui/separator';
 import {Button} from '@/components/ui/button';
-import {useState, useRef} from 'react';
+import {useState, useRef, useEffect} from 'react';
 import * as ExcelJS from 'exceljs';
 
 export default function Home() {
@@ -15,7 +15,13 @@ export default function Home() {
   const [start, setStart] = useState(false);
   const [isValid, setIsValid] = useState(false);
   const [results, setResults] = useState([]);
-  const [bannerImage, setBannerImage] = useState('https://picsum.photos/100/100'); // Default image
+  const [bannerImage, setBannerImage] = useState(() => {
+    // Initialize from local storage or use a default image
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('bannerImage') || 'https://picsum.photos/100/100';
+    }
+    return 'https://picsum.photos/100/100';
+  }); // Default image
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -58,11 +64,18 @@ export default function Home() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setBannerImage(reader.result as string);
+        const newBannerImage = reader.result as string;
+        setBannerImage(newBannerImage);
+        localStorage.setItem('bannerImage', newBannerImage); // Store in local storage
       };
       reader.readAsDataURL(file);
     }
   };
+
+  useEffect(() => {
+    // Set banner image in localStorage
+    localStorage.setItem('bannerImage', bannerImage);
+  }, [bannerImage]);
 
 
     const handleDownloadExcel = async () => {
