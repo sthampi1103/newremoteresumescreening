@@ -104,6 +104,15 @@ export default function Home() {
 
   return (
     <div className="container mx-auto py-10">
+      <div className="text-center mb-8">
+        <img
+          src="https://picsum.photos/100/100" // Replace with your logo URL
+          alt="Resume Screening App Logo"
+          className="mx-auto mb-4 rounded-full"
+          style={{width: '100px', height: '100px', objectFit: 'cover'}}
+        />
+        <h1 className="text-3xl font-semibold">Resume Screening App</h1>
+      </div>
       <Card className="mb-5">
         <CardHeader className="pb-4">
           <CardTitle>Job Description</CardTitle>
