@@ -109,6 +109,16 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
     onStart(jobDescription, resumeText); // Notify parent component
   };
 
+   const handleClear = () => {
+       setResumes([]);
+       setResumeText('');
+       onResumesChange(''); // Notify parent component
+       if (fileInputRef.current) {
+         fileInputRef.current.value = ''; // Reset the file input
+       }
+   }
+
+
   return (
     <div>
       <div className="mb-4">
@@ -140,8 +150,14 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
         onChange={handleTextChange}
         className="mb-4"
       />
+        <div className="flex justify-end">
+            <Button type="button" variant="outline" onClick={handleClear}>
+                Clear
+            </Button>
+        </div>
     </div>
   );
 };
 
 export default ResumeUpload;
+
