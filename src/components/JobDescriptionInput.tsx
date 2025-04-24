@@ -89,6 +89,16 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
     });
   };
 
+  const handleClear = () => {
+      setJobDescription('');
+      setFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; // Reset the file input
+      }
+      setErrorMessage('');
+      onJDChange(''); // Notify parent component
+  }
+
 
   return (
     <div>
@@ -118,6 +128,11 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
 
 
       {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+      <div className="flex justify-end">
+        <Button type="button" variant="outline" onClick={handleClear}>
+          Clear
+        </Button>
+      </div>
     </div>
   );
 };
