@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { useToast } from "@/hooks/use-toast";
+import {useState, useRef, useEffect} from 'react';
+import {Button} from '@/components/ui/button';
+import {Textarea} from '@/components/ui/textarea';
+import {Input} from '@/components/ui/input';
+import {useToast} from '@/hooks/use-toast';
 
 interface JobDescriptionInputProps {
   onJDChange: (jd: string) => void;
@@ -13,11 +13,16 @@ interface JobDescriptionInputProps {
   onClear: () => void;
 }
 
-const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, onReset, clear, onClear }) => {
+const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
+  onJDChange,
+  onReset,
+  clear,
+  onClear,
+}) => {
   const [jobDescription, setJobDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const { toast } = useToast();
+  const {toast} = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -42,8 +47,17 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
     const selectedFile = e.target.files?.[0];
 
     if (selectedFile) {
-      if (!['application/pdf', 'application/msword', 'text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(selectedFile.type)) {
-        setErrorMessage('Invalid file type. Please upload a PDF, DOCX, DOC, or TXT file.');
+      const isValidFileType = [
+        'application/pdf',
+        'application/msword',
+        'text/plain',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ].includes(selectedFile.type || ''); // Check against an empty string in case selectedFile.type is null
+
+      if (!isValidFileType) {
+        setErrorMessage(
+          'Invalid file type. Please upload a PDF, DOCX, DOC, or TXT file.'
+        );
         setFile(null);
         return;
       }
@@ -57,12 +71,12 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
         setJobDescription(fileContent);
         onJDChange(fileContent); // Notify parent component
       } catch (error) {
-        console.error("Error reading file:", error);
-        setErrorMessage("Failed to read the file. Please try again.");
+        console.error('Error reading file:', error);
+        setErrorMessage('Failed to read the file. Please try again.');
         toast({
-          title: "Error",
-          description: "Failed to read the job description file.",
-          variant: "destructive",
+          title: 'Error',
+          description: 'Failed to read the job description file.',
+          variant: 'destructive',
         });
         setFile(null);
       }
@@ -73,16 +87,16 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
-      reader.onload = (event) => {
+      reader.onload = event => {
         if (event.target && typeof event.target.result === 'string') {
           resolve(event.target.result);
         } else {
-          reject(new Error("Failed to read file content"));
+          reject(new Error('Failed to read file content'));
         }
       };
 
       reader.onerror = () => {
-        reject(new Error("Failed to read the file"));
+        reject(new Error('Failed to read the file'));
       };
 
       reader.readAsText(file);
@@ -90,15 +104,14 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
   };
 
   const handleClear = () => {
-      setJobDescription('');
-      setFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''; // Reset the file input
-      }
-      setErrorMessage('');
-      onJDChange(''); // Notify parent component
-  }
-
+    setJobDescription('');
+    setFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Reset the file input
+    }
+    setErrorMessage('');
+    onJDChange(''); // Notify parent component
+  };
 
   return (
     <div>
@@ -125,7 +138,6 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
         onChange={handleTextChange}
         className="mb-4"
       />
-
 
       {errorMessage && <p className="text-red-500">{errorMessage}</p>}
       <div className="flex justify-end">
