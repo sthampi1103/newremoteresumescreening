@@ -138,7 +138,7 @@ export default function Home() {
           <Button onClick={handleReset} variant="outline" disabled={!start && !jobDescription && !resumesText ? true : false}>
             Reset
           </Button>
-          <Button onClick={() => handleStart(jobDescription, resumesText)} className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={!jobDescription || !resumesText || !isValid}>
+          <Button onClick={() => handleStart(jobDescription, resumesText)} className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={(!jobDescription || !resumesText || !isValid) || start}>
             Start
           </Button>
               {start && (
