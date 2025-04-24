@@ -11,20 +11,34 @@ interface ResumeUploadProps {
   onStart: (jd: string, resumes: string) => void;
   jobDescription: string;
   setValid: (valid: boolean) => void;
-    onReset: () => void;
+  onReset: () => void;
+  clear: boolean;
+  onClear: () => void;
 }
 
-const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, jobDescription, setValid, onReset }) => {
+const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, jobDescription, setValid, onReset, clear, onClear }) => {
   const [resumes, setResumes] = useState<File[]>([]);
   const [resumeText, setResumeText] = useState('');
   const { toast } = useToast();
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Validate if resumes are present (either uploaded or typed in)
     const isValid = resumes.length > 0 || (resumeText !== '' && resumeText.trim() !== '');
     setValid(isValid);
   }, [resumes, resumeText, setValid]);
+
+  useEffect(() => {
+    if (clear) {
+      setResumes([]);
+      setResumeText('');
+      onResumesChange(''); // Notify parent component
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; // Reset the file input
+      }
+      onClear();
+    }
+  }, [clear, onResumesChange, onClear]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -75,16 +89,6 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
     onResumesChange(e.target.value); // Notify parent component
   };
 
-    const handleReset = () => {
-        setResumes([]);
-        setResumeText('');
-        onResumesChange(''); // Notify parent component
-        if (fileInputRef.current) {
-            fileInputRef.current.value = ''; // Reset the file input
-        }
-
-    };
-
   const handleStartClick = () => {
     if (!jobDescription) {
       toast({
@@ -115,7 +119,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
           onChange={handleFileChange}
           id="resumeFiles"
           className="hidden"
-            ref={fileInputRef}
+          ref={fileInputRef}
         />
         <label
           htmlFor="resumeFiles"
@@ -136,9 +140,6 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
         onChange={handleTextChange}
         className="mb-4"
       />
-        <Button onClick={handleReset} variant="outline">
-            Clear
-        </Button>
     </div>
   );
 };

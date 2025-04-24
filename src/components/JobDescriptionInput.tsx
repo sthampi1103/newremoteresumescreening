@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -9,15 +9,29 @@ import { useToast } from "@/hooks/use-toast";
 interface JobDescriptionInputProps {
   onJDChange: (jd: string) => void;
   onReset: () => void;
+  clear: boolean;
+  onClear: () => void;
 }
 
-const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, onReset }) => {
+const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, onReset, clear, onClear }) => {
   const [jobDescription, setJobDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const { toast } = useToast();
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (clear) {
+      setJobDescription('');
+      setFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; // Reset the file input
+      }
+      setErrorMessage('');
+      onJDChange(''); // Notify parent component
+      onClear();
+    }
+  }, [clear, onJDChange, onClear]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setJobDescription(e.target.value);
@@ -76,16 +90,6 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
   };
 
 
-  const handleReset = () => {
-    setJobDescription('');
-    setFile(null);
-      if (fileInputRef.current) {
-          fileInputRef.current.value = ''; // Reset the file input
-      }
-    setErrorMessage('');
-    onJDChange(''); // Notify parent component
-  };
-
   return (
     <div>
       <div className="flex items-center space-x-4 mb-4">
@@ -94,7 +98,7 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
           accept=".pdf,.docx,.doc,.txt"
           onChange={handleFileChange}
           id="jobDescriptionFile"
-            ref={fileInputRef}
+          ref={fileInputRef}
           className="hidden"
         />
         <label
@@ -114,10 +118,6 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({ onJDChange, o
 
 
       {errorMessage && <p className="text-red-500">{errorMessage}</p>}
-
-       <Button onClick={handleReset} variant="outline">
-                Clear
-            </Button>
     </div>
   );
 };

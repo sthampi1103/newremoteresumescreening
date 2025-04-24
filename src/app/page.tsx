@@ -14,8 +14,11 @@ export default function Home() {
   const [resumesText, setResumesText] = useState('');
   const [start, setStart] = useState(false);
   const [isValid, setIsValid] = useState(false);
-  const [results, setResults] = useState([]); // State to store results from ResultsDisplay
+  const [results, setResults] = useState([]);
 
+  // State to track whether to clear the JobDescriptionInput and ResumeUpload
+  const [clearJD, setClearJD] = useState(false);
+  const [clearResumes, setClearResumes] = useState(false);
 
   const handleStart = (jd: string, resumes: string) => {
     setJobDescription(jd);
@@ -24,13 +27,25 @@ export default function Home() {
   };
 
   const handleReset = () => {
-    // Implement reset logic here, clear inputs, etc.
+    // Reset all states
     setStart(false);
     setIsValid(false);
     setResumesText('');
     setJobDescription('');
-    setResults([]); // Clear the results
+    setResults([]);
+    setClearJD(true);
+    setClearResumes(true);
   };
+
+  // Callback functions to reset clear states
+  const resetClearJD = () => {
+    setClearJD(false);
+  };
+
+  const resetClearResumes = () => {
+    setClearResumes(false);
+  };
+
 
     const handleDownloadExcel = async () => {
         if (!results || results.length === 0) {
@@ -94,7 +109,7 @@ export default function Home() {
           <CardTitle>Job Description</CardTitle>
         </CardHeader>
         <CardContent>
-          <JobDescriptionInput onJDChange={(jd) => setJobDescription(jd)} onReset={handleReset}/>
+          <JobDescriptionInput onJDChange={(jd) => setJobDescription(jd)} onReset={handleReset} clear={clearJD} onClear={resetClearJD}/>
         </CardContent>
       </Card>
 
@@ -103,7 +118,7 @@ export default function Home() {
           <CardTitle>Resume Upload</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResumeUpload onResumesChange={(resumes) => setResumesText(resumes)} onStart={handleStart} jobDescription={jobDescription} setValid={setIsValid} onReset={handleReset}/>
+          <ResumeUpload onResumesChange={(resumes) => setResumesText(resumes)} onStart={handleStart} jobDescription={jobDescription} setValid={setIsValid} onReset={handleReset} clear={clearResumes} onClear={resetClearResumes}/>
         </CardContent>
       </Card>
 
