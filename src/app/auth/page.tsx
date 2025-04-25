@@ -8,6 +8,8 @@ import {
   createUserWithEmailAndPassword,
 } from 'firebase/auth';
 import {app, appInitialized} from '../firebaseConfig';
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
 
 let auth;
 if (appInitialized){
@@ -55,11 +57,12 @@ const AuthPage = ({}: AuthPageProps) => {
     event.preventDefault();
     setError(null);
 
+    if (!appInitialized){
+      setError("Firebase could not be initialized.  Check your environment variables and try again.");
+      return;
+    }
+
     try {
-      if (!appInitialized){
-        setError("Firebase could not be initialized.  Check your environment variables and try again.");
-        return;
-      }
       if (isSignUp) {
         await signUp(email, password);
       } else {
@@ -96,7 +99,7 @@ const AuthPage = ({}: AuthPageProps) => {
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
               Email
             </label>
-            <input
+            <Input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="email"
               type="email"
@@ -110,7 +113,7 @@ const AuthPage = ({}: AuthPageProps) => {
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
               Password
             </label>
-            <input
+            <Input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="password"
               type="password"
@@ -121,19 +124,19 @@ const AuthPage = ({}: AuthPageProps) => {
             />
           </div>
           <div className="flex items-center justify-between">
-            <button
+            <Button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               type="submit"
             >
               {isSignUp ? 'Sign Up' : 'Login'}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+              variant="link"
               onClick={() => setIsSignUp(!isSignUp)}
             >
               {isSignUp ? 'Already have an account? Login' : 'Create an Account'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
