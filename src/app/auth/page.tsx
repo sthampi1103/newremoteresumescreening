@@ -39,9 +39,10 @@ const AuthPage = ({}: AuthPageProps) => {
       }
       router.push("/dashboard");
     } catch (err: any) {
-      if (err.code === 'auth/email-already-in-use') {
+      const errorCode = err.code || 'auth/error';
+      if (errorCode === 'auth/email-already-in-use') {
         setError('Email already in use. Please sign in instead.');
-      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found'){
+      } else if (errorCode === 'auth/wrong-password' || errorCode === 'auth/user-not-found'){
         setError('Invalid credentials');
       } else {
         setError('An error occurred. Please try again.');
