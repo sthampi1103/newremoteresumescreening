@@ -8,14 +8,12 @@ import {useToast} from '@/hooks/use-toast';
 
 interface JobDescriptionInputProps {
   onJDChange: (jd: string) => void;
-  onReset: () => void;
   clear: boolean;
   onClear: () => void;
 }
 
 const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
   onJDChange,
-  onReset,
   clear,
   onClear,
 }) => {
@@ -56,11 +54,21 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
           ].includes(selectedFile.type)
         : false;
 
+      if (!selectedFile.type) {
+        setErrorMessage(
+          'Could not determine file type. Please upload a PDF, DOCX, DOC, or TXT file.'
+        );
+        setFile(null);
+        onJDChange('');
+        return;
+      }
+
       if (!isValidFileType) {
         setErrorMessage(
           'Invalid file type. Please upload a PDF, DOCX, DOC, or TXT file.'
         );
         setFile(null);
+        onJDChange('');
         return;
       }
 
@@ -81,6 +89,7 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
           variant: 'destructive',
         });
         setFile(null);
+        onJDChange('');
       }
     }
   };
@@ -103,16 +112,6 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
 
       reader.readAsText(file);
     });
-  };
-
-  const handleClear = () => {
-    setJobDescription('');
-    setFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''; // Reset the file input
-    }
-    setErrorMessage('');
-    onJDChange(''); // Notify parent component
   };
 
   return (
@@ -142,11 +141,6 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
       />
 
       {errorMessage && <p className="text-red-500">{errorMessage}</p>}
-      <div className="flex justify-end">
-        <Button type="button" variant="outline" onClick={handleClear}>
-          Clear
-        </Button>
-      </div>
     </div>
   );
 };
