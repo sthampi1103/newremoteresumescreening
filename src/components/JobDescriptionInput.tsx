@@ -47,12 +47,14 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
     const selectedFile = e.target.files?.[0];
 
     if (selectedFile) {
-      const isValidFileType = [
-        'application/pdf',
-        'application/msword',
-        'text/plain',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      ].includes(selectedFile.type || ''); // Check against an empty string in case selectedFile.type is null
+      const isValidFileType = selectedFile.type
+        ? [
+            'application/pdf',
+            'application/msword',
+            'text/plain',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          ].includes(selectedFile.type)
+        : false;
 
       if (!isValidFileType) {
         setErrorMessage(
