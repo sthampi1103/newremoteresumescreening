@@ -3,7 +3,6 @@
 import {useRouter} from 'next/navigation';
 import {useEffect, useState, useRef, useCallback} from 'react';
 import * as ExcelJS from 'exceljs';
-import bannerImage from '../../public/logo.png'; // Import the image
 import {Button} from '@/components/ui/button';
 import JobDescriptionInput from '@/components/JobDescriptionInput';
 import ResumeUpload from '@/components/ResumeUpload';
@@ -21,7 +20,7 @@ export default function Home() {
   const [isStartActive, setIsStartActive] = useState(false);
   const [isResetActive, setIsResetActive] = useState(false);
   const [isResultsDisplayed, setIsResultsDisplayed] = useState(false);
-  const [logo, setLogo] = useState(bannerImage);
+  const [logo, setLogo] = useState('/logo.png'); // Set initial logo path
   const [isLogoChangeActive, setIsLogoChangeActive] = useState(false);
   const router = useRouter();
   const {toast} = useToast();
@@ -75,7 +74,7 @@ export default function Home() {
     setIsStartActive(false);
     setIsResetActive(false);
     setIsResultsDisplayed(false);
-    setLogo(bannerImage);
+    setLogo('/logo.png'); // Reset to the default logo path
   };
 
   const handleDownload = async () => {
