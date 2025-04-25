@@ -15,5 +15,27 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-export const app = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app);
+let appInitialized = false;
+let app;
+
+try {
+  if (
+    firebaseConfig.apiKey &&
+    firebaseConfig.authDomain &&
+    firebaseConfig.projectId &&
+    firebaseConfig.storageBucket &&
+    firebaseConfig.messagingSenderId &&
+    firebaseConfig.appId &&
+    firebaseConfig.measurementId
+  ) {
+    app = initializeApp(firebaseConfig);
+    appInitialized = true;
+  } else {
+    console.error("Firebase configuration is incomplete.  Check environment variables.");
+  }
+} catch (e) {
+    console.error("Error initializing Firebase:", e);
+    appInitialized = false;
+}
+
+export { app, appInitialized };

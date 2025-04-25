@@ -6,18 +6,30 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  AuthError,
 } from 'firebase/auth';
-import {app} from '../firebaseConfig';
+import {app, appInitialized} from '../firebaseConfig';
 
-const auth = getAuth(app);
+let auth;
+if (appInitialized){
+    auth = getAuth(app);
+}
 
 export const signUp = async (email: string, password: string): Promise<void> => {
-  await createUserWithEmailAndPassword(auth, email, password);
+  if (auth) {
+    await createUserWithEmailAndPassword(auth, email, password);
+  } else {
+    console.error("Firebase not initialized. Cannot sign up.");
+    throw new Error("Firebase not initialized");
+  }
 };
 
 export const signIn = async (email: string, password: string): Promise<void> => {
-  await signInWithEmailAndPassword(auth, email, password);
+  if (auth) {
+    await signInWithEmailAndPassword(auth, email, password);
+  } else {
+    console.error("Firebase not initialized. Cannot sign in.");
+    throw new Error("Firebase not initialized");
+  }
 };
 
 type AuthPageProps = {};
@@ -34,6 +46,10 @@ const AuthPage = ({}: AuthPageProps) => {
     setError(null);
 
     try {
+      if (!appInitialized){
+        setError("Firebase could not be initialized.  Check your environment variables and try again.");
+        return;
+      }
       if (isSignUp) {
         await signUp(email, password);
       } else {
