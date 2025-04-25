@@ -16,7 +16,12 @@ if (appInitialized){
 
 export const signUp = async (email: string, password: string): Promise<void> => {
   if (auth) {
-    await createUserWithEmailAndPassword(auth, email, password);
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      console.error("Signup error:", error.message, error.code);
+      throw error; 
+    }
   } else {
     console.error("Firebase not initialized. Cannot sign up.");
     throw new Error("Firebase not initialized");
@@ -25,7 +30,12 @@ export const signUp = async (email: string, password: string): Promise<void> => 
 
 export const signIn = async (email: string, password: string): Promise<void> => {
   if (auth) {
-    await signInWithEmailAndPassword(auth, email, password);
+     try {
+       await signInWithEmailAndPassword(auth, email, password);
+     } catch (error: any) {
+       console.error("Signin error:", error.message, error.code);
+       throw error;
+     }
   } else {
     console.error("Firebase not initialized. Cannot sign in.");
     throw new Error("Firebase not initialized");
