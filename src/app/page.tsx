@@ -3,7 +3,7 @@
 import {useRouter} from 'next/navigation';
 import {useEffect, useState, useRef, useCallback} from 'react';
 import * as ExcelJS from 'exceljs';
-import bannerImage from '@/public/logo.png'; // Import the image
+import bannerImage from '../../public/logo.png'; // Import the image
 import {Button} from '@/components/ui/button';
 import JobDescriptionInput from '@/components/JobDescriptionInput';
 import ResumeUpload from '@/components/ResumeUpload';
@@ -217,3 +217,4 @@ export default function Home() {
     </div>
   );
 }
+
