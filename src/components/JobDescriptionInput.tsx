@@ -5,6 +5,7 @@ import {Button} from '@/components/ui/button';
 import {Textarea} from '@/components/ui/textarea';
 import {Input} from '@/components/ui/input';
 import {useToast} from '@/hooks/use-toast';
+import {Icons} from "@/components/icons";
 
 interface JobDescriptionInputProps {
   onJDChange: (jd: string) => void;
@@ -51,6 +52,9 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
             'application/msword',
             'text/plain',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+            'application/vnd.ms-word.document.macroEnabled.12',
+            'application/vnd.ms-word.template.macroEnabled.12',
           ].includes(selectedFile.type)
         : false;
 
@@ -114,12 +118,22 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
     });
   };
 
+  const handleClear = () => {
+      setJobDescription('');
+      setFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; // Reset the file input
+      }
+      setErrorMessage('');
+      onJDChange(''); // Notify parent component
+  };
+
   return (
     <div>
       <div className="flex items-center space-x-4 mb-4">
         <Input
           type="file"
-          accept=".pdf,.docx,.doc,.txt"
+          accept=".pdf,.docx,.doc,.txt,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
           onChange={handleFileChange}
           id="jobDescriptionFile"
           ref={fileInputRef}
@@ -139,7 +153,11 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
         onChange={handleTextChange}
         className="mb-4"
       />
-
+        <div className="flex justify-end">
+            <Button type="button" variant="outline" onClick={handleClear}>
+                Clear
+            </Button>
+        </div>
       {errorMessage && <p className="text-red-500">{errorMessage}</p>}
     </div>
   );

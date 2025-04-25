@@ -20,7 +20,7 @@ interface ResultsDisplayProps {
 
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ jobDescription, resumesText, setResults }) => {
   const [loading, setLoading] = useState(true);
-  const [results, setResultsInternal] = useState<any[]>([]); // Initialize with an empty array
+  const [internalResults, setInternalResults] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,7 +29,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ jobDescription, resumes
         const resumesArray = resumesText.split('\n').filter(text => text.trim() !== '');
         const apiResults = await rankResumes({ jobDescription: jobDescription, resumes: resumesArray });
         setResults(apiResults); // Update the results state in the parent
-        setResultsInternal(apiResults); // Also update the local state
+        setInternalResults(apiResults); // Update the internal state
       } catch (error) {
         console.error("Error fetching data:", error);
         // Handle error appropriately
@@ -61,8 +61,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ jobDescription, resumes
           <TableRow>
             <TableCell colSpan={6} className="text-center">Loading...</TableCell>
           </TableRow>
-        ) : results.length > 0 ? ( // Conditionally render the table based on results
-          results.map((result, index) => (
+        ) : internalResults && internalResults.length > 0 ? ( // Conditionally render the table based on results
+          internalResults.map((result, index) => (
             <TableRow key={index}>
               <TableCell>{result.name}</TableCell>
               <TableCell>{result.summary}</TableCell>

@@ -42,12 +42,13 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const fileTexts: string[] = [];
+    setResumes(files);
 
+    let allResumeText = '';
     for (const file of files) {
       try {
         const fileContent = await readFileContent(file);
-        fileTexts.push(fileContent);
+        allResumeText += fileContent + '\n';
       } catch (error) {
         console.error("Error reading file:", error);
         toast({
@@ -58,10 +59,8 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
       }
     }
 
-    setResumes(files);
-    const allResumesText = fileTexts.join('\n');
-    setResumeText(allResumesText);
-    onResumesChange(allResumesText); // Notify parent component
+    setResumeText(allResumeText);
+    onResumesChange(allResumeText); // Notify parent component
   };
 
   const readFileContent = (file: File): Promise<string> => {
@@ -89,35 +88,14 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
     onResumesChange(e.target.value); // Notify parent component
   };
 
-  const handleStartClick = () => {
-    if (!jobDescription) {
-      toast({
-        title: "Error",
-        description: "Please enter a job description before starting.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (!resumeText && resumes.length === 0) {
-       toast({
-         title: "Error",
-         description: "Please upload resume(s) before starting.",
-         variant: "destructive",
-       });
-       return;
-    }
-    onStart(jobDescription, resumeText); // Notify parent component
-  };
-
    const handleClear = () => {
-       setResumes([]);
-       setResumeText('');
-       onResumesChange(''); // Notify parent component
-       if (fileInputRef.current) {
-         fileInputRef.current.value = ''; // Reset the file input
-       }
-   }
-
+        setResumes([]);
+        setResumeText('');
+        onResumesChange(''); // Notify parent component
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''; // Reset the file input
+        }
+    };
 
   return (
     <div>
@@ -150,14 +128,13 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, onStart, j
         onChange={handleTextChange}
         className="mb-4"
       />
-        <div className="flex justify-end">
-            <Button type="button" variant="outline" onClick={handleClear}>
-                Clear
-            </Button>
-        </div>
+       <div className="flex justify-end">
+          <Button type="button" variant="outline" onClick={handleClear}>
+              Clear
+          </Button>
+       </div>
     </div>
   );
 };
 
 export default ResumeUpload;
-
