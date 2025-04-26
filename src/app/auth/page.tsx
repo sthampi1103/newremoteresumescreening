@@ -5,7 +5,7 @@ import {useRouter} from 'next/navigation';
 import {
   getAuth,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
+  createUserWithEmailAndPassword, // Keep import for potential future use, but functionality disabled
 } from 'firebase/auth';
 import {app, appInitialized} from '../firebaseConfig';
 import {Button} from "@/components/ui/button";
@@ -16,6 +16,7 @@ if (appInitialized){
     auth = getAuth(app);
 }
 
+// Sign up function remains for potential future re-enablement, but is not called from UI
 export const signUp = async (email: string, password: string): Promise<void> => {
   if (auth) {
     try {
@@ -50,7 +51,7 @@ type AuthPageProps = {};
 const AuthPage = ({}: AuthPageProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
+  // const [isSignUp, setIsSignUp] = useState(false); // Removed isSignUp state
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -64,17 +65,13 @@ const AuthPage = ({}: AuthPageProps) => {
     }
 
     try {
-      if (isSignUp) {
-        await signUp(email, password);
-      } else {
-        await signIn(email, password);
-      }
-      router.push('/'); // Redirect to home page after successful login/signup
+      // Always attempt sign in, removed signup logic branch
+      await signIn(email, password);
+      router.push('/'); // Redirect to home page after successful login
     } catch (err: any) {
       const errorCode = err.code || 'auth/error';
-      if (errorCode === 'auth/email-already-in-use') {
-        setError('Email already in use. Please sign in instead.');
-      } else if (errorCode === 'auth/wrong-password' || errorCode === 'auth/user-not-found' || errorCode === 'auth/invalid-credential') {
+      // Removed signup-specific error handling (email-already-in-use)
+      if (errorCode === 'auth/wrong-password' || errorCode === 'auth/user-not-found' || errorCode === 'auth/invalid-credential') {
         setError('Invalid credentials');
       } else {
         setError('An error occurred. Please try again.');
@@ -86,7 +83,8 @@ const AuthPage = ({}: AuthPageProps) => {
   return (
     <div className="flex justify-center items-center h-screen">
       <div className="bg-card text-card-foreground p-8 rounded-lg shadow-md w-96 border">
-        <h2 className="text-2xl font-bold mb-6 text-center">{isSignUp ? 'Sign Up' : 'Login'}</h2>
+        {/* Title is now always Login */}
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
         {error && (
           <div
             className="bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded relative mb-4"
@@ -129,16 +127,18 @@ const AuthPage = ({}: AuthPageProps) => {
             />
           </div>
           <div className="flex items-center justify-between">
+            {/* Submit button text is now always Login */}
             <Button
               className="w-full"
               type="submit"
               suppressHydrationWarning={true}
             >
-              {isSignUp ? 'Sign Up' : 'Login'}
+              Login
             </Button>
 
           </div>
-           <div className="mt-4 text-center">
+           {/* Removed the toggle button for Sign Up */}
+           {/* <div className="mt-4 text-center">
              <Button
                 type="button"
                 variant="link"
@@ -148,7 +148,7 @@ const AuthPage = ({}: AuthPageProps) => {
               >
                 {isSignUp ? 'Already have an account? Login' : 'Create an Account'}
               </Button>
-           </div>
+           </div> */}
         </form>
       </div>
     </div>
