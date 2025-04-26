@@ -214,6 +214,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, clear, onC
             onClick={handleClear}
             disabled={uploadedFiles.length === 0 && !textAreaContent}
             >
+             <Icons.close className="mr-2 h-4 w-4" /> {/* Added close icon */}
               Clear Resumes
           </Button>
        </div>

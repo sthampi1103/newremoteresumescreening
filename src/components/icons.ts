@@ -1,4 +1,4 @@
-import {ArrowRight, Check, ChevronsUpDown, Circle, Copy, Edit, ExternalLink, File, HelpCircle, Home, Loader2, Mail, MessageSquare, Moon, Plus, PlusCircle, Search, Server, Settings, Share2, Shield, Sun, Trash, User, X, Workflow, FileUp, Loader, AlertCircle, FileText} from 'lucide-react'; // Added AlertCircle, FileText
+import {ArrowRight, Check, ChevronsUpDown, Circle, Copy, Edit, ExternalLink, File, HelpCircle, Home, Loader2, Mail, MessageSquare, Moon, Plus, PlusCircle, Search, Server, Settings, Share2, Shield, Sun, Trash, User, X, Workflow, FileUp, Loader, AlertCircle, FileText, Play, RefreshCw, Wand } from 'lucide-react'; // Added Play, RefreshCw (for reset), Wand
 
 const Icons = {
   arrowRight: ArrowRight,
@@ -29,8 +29,11 @@ const Icons = {
   trash: Trash,
   user: User,
   fileUpload: FileUp,
-  alertCircle: AlertCircle, // Keep added AlertCircle
-  fileText: FileText, // Added FileText for document icon
+  alertCircle: AlertCircle,
+  fileText: FileText,
+  play: Play, // Added Play icon
+  refresh: RefreshCw, // Added RefreshCw icon (alias as refresh)
+  wand: Wand, // Added Wand icon for Generate Questions
 };
 
 export {Icons};

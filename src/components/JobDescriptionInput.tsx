@@ -64,11 +64,9 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
         'application/msword', // .doc
         'text/plain', // .txt
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-        // Add other potential MIME types if necessary
       ];
       const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase();
 
-      // Basic type check based on extension if MIME type is unreliable
       const isValidExtension = fileExtension && ['pdf', 'doc', 'docx', 'txt'].includes(fileExtension);
       const isValidMimeType = selectedFile.type && allowedTypes.includes(selectedFile.type);
 
@@ -78,29 +76,27 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
          setErrorMessage(errorMsg);
          toast({ title: "Error", description: errorMsg, variant: "destructive" });
          setFile(null);
-         setJobDescription(''); // Clear text area if invalid file is chosen
-         validateAndNotify(''); // Notify parent
-         if (fileInputRef.current) fileInputRef.current.value = ''; // Clear file input
+         setJobDescription('');
+         validateAndNotify('');
+         if (fileInputRef.current) fileInputRef.current.value = '';
          return;
       }
 
 
       setFile(selectedFile);
-      setJobDescription(''); // Clear text area when a file is selected
+      setJobDescription('');
 
-      // Read the file content
       try {
         const fileContent = await readFileContent(selectedFile);
         if (fileContent === null) {
-            // Error handled within readFileContent
             setFile(null);
             validateAndNotify('');
             if (fileInputRef.current) fileInputRef.current.value = '';
         } else {
             setJobDescription(fileContent);
-            validateAndNotify(fileContent); // Notify parent component
+            validateAndNotify(fileContent);
         }
-      } catch (error) { // Catch errors from readFileContent promise rejection
+      } catch (error) {
         console.error('Error reading file:', error);
         const errorMsg = `Failed to read file "${selectedFile.name}". It might be corrupted or in an unreadable format.`;
         setErrorMessage(errorMsg);
@@ -115,9 +111,7 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
          if (fileInputRef.current) fileInputRef.current.value = '';
       }
     } else {
-        // No file selected, might happen if user cancels file dialog
         setFile(null);
-        // If text area was already cleared, ensure parent knows it's invalid
         if (!jobDescription) {
             validateAndNotify('');
         }
@@ -130,24 +124,19 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
 
       reader.onload = event => {
         if (event.target && typeof event.target.result === 'string') {
-          // Basic check for unreadable content (e.g., binary data read as text)
-          // This is a very basic check and might need refinement
           const content = event.target.result;
           if (content.includes('�') && file.type !== 'text/plain') {
              console.warn(`File "${file.name}" might contain unreadable characters.`);
-             // Optionally reject or show a warning toast here if it's likely unreadable
-             // For now, resolve but maybe add a flag or different handling later
           }
           if (content.trim() === '') {
             const errorMsg = `File "${file.name}" appears to be empty or unreadable.`;
             setErrorMessage(errorMsg);
             toast({ title: 'File Error', description: errorMsg, variant: 'destructive' });
-            resolve(null); // Resolve with null to indicate failure
+            resolve(null);
           } else {
             resolve(content);
           }
         } else {
-           // This case should ideally not happen for readAsText, but handle defensively
           reject(new Error('Failed to read file content as text.'));
         }
       };
@@ -162,7 +151,6 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
          reject(new Error(`File reading aborted for "${file.name}"`));
        };
 
-      // Always read as text for now. More complex parsing (PDF, DOCX) would require libraries.
       reader.readAsText(file);
     });
   };
@@ -171,14 +159,15 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
       setJobDescription('');
       setFile(null);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ''; // Reset the file input
+        fileInputRef.current.value = '';
       }
       setErrorMessage('');
-      validateAndNotify(''); // Notify parent component
+      validateAndNotify('');
   };
 
   return (
-    <div>
+    // Changed to flex-grow to allow parent button to be at bottom
+    <div className="flex flex-col h-full">
       <div className="flex items-center space-x-4 mb-4">
         <Input
           type="file"
@@ -186,30 +175,35 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
           onChange={handleFileChange}
           id="jobDescriptionFile"
           ref={fileInputRef}
-          className="hidden" // Keep hidden, use label for interaction
+          className="hidden"
           aria-label="Upload Job Description File"
         />
         <label
           htmlFor="jobDescriptionFile"
           className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 cursor-pointer"
-          role="button" // Add role for accessibility
-          tabIndex={0} // Make label focusable
-           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }} // Allow activation with keyboard
+          role="button"
+          tabIndex={0}
+           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
         >
-         <Icons.fileUpload className="mr-2 h-4 w-4" /> {/* Added Icon */}
+         <Icons.fileUpload className="mr-2 h-4 w-4" />
           Upload File
         </label>
         {file && <span className="text-sm truncate" title={file.name}>Selected: {file.name}</span>}
       </div>
-      <Textarea
-        placeholder="Or paste job description here..."
-        value={jobDescription}
-        onChange={handleTextChange}
-        className="mb-4 min-h-[150px]" // Increased min-height
-         aria-label="Job Description Text Input"
-      />
+      {/* Added flex-grow to textarea wrapper */}
+      <div className="flex-grow mb-4">
+        <Textarea
+          placeholder="Or paste job description here..."
+          value={jobDescription}
+          onChange={handleTextChange}
+          className="min-h-[150px] h-full" // Use h-full to take available space
+           aria-label="Job Description Text Input"
+        />
+      </div>
+        {/* Clear button moved slightly up to allow Generate button below */}
         <div className="flex justify-end">
             <Button type="button" variant="outline" onClick={handleClear} disabled={!jobDescription && !file}>
+                <Icons.close className="mr-2 h-4 w-4" /> {/* Added close icon */}
                 Clear JD
             </Button>
         </div>
