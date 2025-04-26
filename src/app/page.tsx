@@ -35,7 +35,6 @@ export default function Home() {
   const [isResetActive, setIsResetActive] = useState(false);
   const [isResultsDisplayed, setIsResultsDisplayed] = useState(false);
   const [showInterviewQuestions, setShowInterviewQuestions] = useState(false); // State to control question tab visibility
-  const [logo, setLogo] = useState<string>('/logo.png');
   const [clearJDTrigger, setClearJDTrigger] = useState(false);
   const [clearResumesTrigger, setClearResumesTrigger] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -48,7 +47,7 @@ export default function Home() {
 
   const router = useRouter();
   const {toast} = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   // Get Firebase Auth instance
   let auth;
@@ -76,15 +75,6 @@ export default function Home() {
     });
     return () => unsubscribe();
   }, [router, appInitialized, auth]); // Add dependencies
-
-
-  // Load logo from local storage on initial render
-  useEffect(() => {
-      const savedLogo = localStorage.getItem('appLogo');
-      if (savedLogo) {
-          setLogo(savedLogo);
-      }
-  }, []);
 
 
   // Check if inputs are valid whenever jobDescription or resumesText changes
@@ -159,27 +149,6 @@ export default function Home() {
       }
    };
 
-
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-
-    if (selectedFile) {
-      const reader = new FileReader();
-      reader.onload = event => {
-        if (event.target && typeof event.target.result === 'string') {
-           const newLogo = event.target.result;
-           setLogo(newLogo);
-           localStorage.setItem('appLogo', newLogo);
-        }
-      };
-      reader.readAsDataURL(selectedFile);
-    }
-  };
-
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const handleReset = () => {
     setJobDescription('');
     setResumesText('');
@@ -189,9 +158,6 @@ export default function Home() {
     setIsResetActive(false);
     setIsResultsDisplayed(false);
     setShowInterviewQuestions(false); // Hide questions tab
-    // Do not reset logo on general reset, only on logout or explicit logo reset
-    // setLogo('/logo.png');
-    // localStorage.removeItem('appLogo');
     setLoading(false);
     setError(null);
     setIsGeneratingQuestions(false); // Reset question loading state
@@ -211,7 +177,7 @@ export default function Home() {
      }
     try {
       await signOut(auth);
-      localStorage.removeItem('appLogo'); // Clear logo on sign out
+      // No need to clear logo as it's fixed now
       router.push('/auth');
     } catch (error) {
       console.error("Sign out error:", error);
@@ -409,21 +375,34 @@ export default function Home() {
            </Button>
          </div>
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleLogoChange}
-          style={{display: 'none'}}
-          ref={fileInputRef}
-          suppressHydrationWarning={true}
-        />
-        <img
-          src={logo}
-          alt="Resume Screening App Logo"
-          className="h-20 w-auto rounded-md shadow-md cursor-pointer mb-2 object-contain"
-          onClick={handleImageClick}
-          suppressHydrationWarning={true}
-        />
+        {/* Fixed SVG Logo */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 512 512"
+          className="h-20 w-auto rounded-md shadow-md mb-2 object-contain" // Keep styling similar
+          fill="hsl(25, 75%, 65%)" // Approximate color from image
+        >
+          <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: 'hsl(25, 85%, 75%)', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: 'hsl(25, 65%, 55%)', stopOpacity: 1 }} />
+            </linearGradient>
+             <linearGradient id="grad2" x1="100%" y1="0%" x2="0%" y2="100%">
+               <stop offset="0%" style={{ stopColor: 'hsl(25, 85%, 75%)', stopOpacity: 0.8 }} />
+               <stop offset="100%" style={{ stopColor: 'hsl(25, 65%, 55%)', stopOpacity: 0.8 }} />
+             </linearGradient>
+          </defs>
+          <path
+            fill="url(#grad1)"
+            d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0 0 114.6 0 256s114.6 256 256 256zM138.8 144.8C180.2 105.8 240.1 83 304.1 83c39.8 0 76.4 11.8 106.9 31.9-30.6 17.9-65.1 29.4-101.8 33.9-40.2 4.9-80.8 2.1-119.1-8.6-17.5-4.9-34.4-10.7-50.1-17.4zm234.4 222.4c-41.4 39-101.3 61.8-165.3 61.8-39.8 0-76.4-11.8-106.9-31.9 30.6-17.9 65.1-29.4 101.8-33.9 40.2-4.9 80.8-2.1 119.1 8.6 17.5 4.9 34.4 10.7 50.1 17.4z"
+          />
+          <path
+              fill="url(#grad2)"
+              d="M108.9 304.1C83 240.1 105.8 180.2 144.8 138.8c4.9-17.5 10.7-34.4 17.4-50.1 17.9-30.6 29.4-65.1 33.9-101.8 4.9-40.2 2.1-80.8-8.6-119.1C219.6 44.2 237.4 32 256 32s36.4 12.2 51.9 29.9c10.7 38.3 13.5 78.9 8.6 119.1-4.5 36.7-16 71.2-33.9 101.8-6.7 15.7-12.5 32.6-17.4 50.1-39 41.4-61.8 101.3-61.8 165.3 0 18.6-12.2 36.4-29.9 51.9-38.3-10.7-78.9-13.5-119.1-8.6-36.7 4.5-71.2 16-101.8 33.9-15.7 6.7-32.6 12.5-50.1 17.4 41.4-39 61.8-101.3 61.8-165.3z"
+              opacity="0.8"
+            />
+
+        </svg>
         <h1 className="text-2xl font-bold mt-2">Resume Screening App</h1>
       </div>
 
