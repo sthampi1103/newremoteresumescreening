@@ -11,7 +11,12 @@ import mammoth from 'mammoth/mammoth.browser'; // For DOCX
 import * as pdfjsLib from 'pdfjs-dist/build/pdf';
 
 // Set worker source for pdf.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Use a known working version from the installed package.json.
+// If pdfjs-dist version changes, this might need updating.
+// The error log reported version 4.10.38, while package.json has 4.4.168. Using the package.json version explicitly.
+const PDFJS_VERSION = '4.4.168'; // As per package.json
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.js`;
+
 
 interface FileConverterProps {}
 
@@ -121,6 +126,7 @@ const FileConverter: React.FC<FileConverterProps> = () => {
                ref={fileInputRef}
                className="hidden"
                aria-label="Upload PDF or DOCX File for Conversion"
+               suppressHydrationWarning={true} // Added suppressHydrationWarning
            />
            <label
                htmlFor="fileConverterInput"
@@ -133,11 +139,11 @@ const FileConverter: React.FC<FileConverterProps> = () => {
                <Icons.fileUp className="mr-2 h-4 w-4" /> {/* Changed icon */}
                Select File (PDF/DOCX)
            </label>
-           {inputFile && <span className="text-sm truncate" title={inputFile.name}>Selected: {inputFile.name}</span>}
+           {inputFile && <span className="text-sm truncate" title={inputFile.name} suppressHydrationWarning={true}>Selected: {inputFile.name}</span>}
        </div>
 
       {conversionError && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" suppressHydrationWarning={true}>
           <Icons.alertCircle className="h-4 w-4" />
           <AlertTitle>Conversion Error</AlertTitle>
           <AlertDescription>{conversionError}</AlertDescription>
