@@ -8,9 +8,13 @@ import JobDescriptionInput from '@/components/JobDescriptionInput';
 import ResumeUpload from '@/components/ResumeUpload';
 import ResultsDisplay from '@/components/ResultsDisplay';
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
-import {FileUp, XCircle} from 'lucide-react';
 import {Icons} from '@/components/icons';
 import {useToast} from '@/hooks/use-toast';
+
+// Note: If you encounter a runtime error like "Cannot read properties of null (reading 'type')"
+// originating from a browser extension (e.g., chrome-extension://.../inpage.js),
+// it's likely caused by the extension interfering with the page, not a bug in this application.
+// Try disabling the problematic browser extension (like crypto wallets) and reloading the page.
 
 export default function Home() {
   const [jobDescription, setJobDescription] = useState('');
@@ -22,29 +26,36 @@ export default function Home() {
   const [isResultsDisplayed, setIsResultsDisplayed] = useState(false);
   const [logo, setLogo] = useState('/logo.png'); // Set initial logo path
   const [isLogoChangeActive, setIsLogoChangeActive] = useState(false);
+  const [clearJDTrigger, setClearJDTrigger] = useState(false);
+  const [clearResumesTrigger, setClearResumesTrigger] = useState(false);
   const router = useRouter();
   const {toast} = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Check if inputs are valid whenever jobDescription or resumesText changes
   useEffect(() => {
-    const areInputsValid = jobDescription.trim() !== '' && resumesText.trim() !== '';
+    const areInputsValid =
+      jobDescription.trim() !== '' && resumesText.trim() !== '';
     setIsStartActive(areInputsValid);
-  }, [jobDescription, resumesText]);
+    // Enable reset button if any input has content or results are displayed
+    const shouldResetBeActive =
+      jobDescription.trim() !== '' ||
+      resumesText.trim() !== '' ||
+      results.length > 0;
+    setIsResetActive(shouldResetBeActive);
+  }, [jobDescription, resumesText, results]);
 
   const handleJDChange = (jd: string) => {
     setJobDescription(jd);
-    setIsResetActive(true);
   };
 
   const handleResumesChange = (resumes: string) => {
     setResumesText(resumes);
-    setIsResetActive(true);
   };
 
   const handleStart = async (jd: string, resumes: string) => {
     setIsResultsDisplayed(true);
-    setIsStartActive(false);
-
+    setIsStartActive(false); // Deactivate Start button after clicking
   };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +73,6 @@ export default function Home() {
   };
 
   const handleImageClick = () => {
-    setIsLogoChangeActive(true);
     fileInputRef.current?.click();
   };
 
@@ -71,10 +81,13 @@ export default function Home() {
     setResumesText('');
     setResults([]);
     setValid(false);
-    setIsStartActive(false);
-    setIsResetActive(false);
+    setIsStartActive(false); // Reset start button state
+    setIsResetActive(false); // Reset button should become inactive after reset
     setIsResultsDisplayed(false);
     setLogo('/logo.png'); // Reset to the default logo path
+    // Trigger clear in child components
+    setClearJDTrigger(true);
+    setClearResumesTrigger(true);
   };
 
   const handleDownload = async () => {
@@ -87,9 +100,17 @@ export default function Home() {
       {header: 'Summary', key: 'summary', width: 40},
       {header: 'Score', key: 'score', width: 10},
       {header: 'Rationale', key: 'rationale', width: 40},
-      {header: 'Essential Skills Match', key: 'essentialSkillsMatch', width: 20},
+      {
+        header: 'Essential Skills Match',
+        key: 'essentialSkillsMatch',
+        width: 20,
+      },
       {header: 'Relevant Experience', key: 'relevantExperience', width: 20},
-      {header: 'Required Qualifications', key: 'requiredQualifications', width: 20},
+      {
+        header: 'Required Qualifications',
+        key: 'requiredQualifications',
+        width: 20,
+      },
       {header: 'Keyword Presence', key: 'keywordPresence', width: 20},
       {header: 'Recommendation', key: 'recommendation', width: 20},
     ];
@@ -125,12 +146,11 @@ export default function Home() {
     document.body.removeChild(link);
   };
 
-  useEffect(() => {
-    router.push('/auth');
-  }, [router]);
+  // Redirect logic removed, assuming user is already authenticated
+  // and lands on this page directly or via dashboard redirection.
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen bg-background">
       {/* Banner */}
       <div className="bg-primary text-primary-foreground p-4 flex flex-col items-center">
         <input
@@ -143,7 +163,7 @@ export default function Home() {
         <img
           src={logo}
           alt="Resume Screening App Logo"
-          className="h-20 w-auto rounded-md shadow-md cursor-pointer"
+          className="h-20 w-auto rounded-md shadow-md cursor-pointer mb-2"
           onClick={handleImageClick}
         />
         <h1 className="text-2xl font-bold mt-2">Resume Screening App</h1>
@@ -152,39 +172,40 @@ export default function Home() {
       <div className="container mx-auto p-4 flex-grow">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Job Description Input Section */}
-          <div className="bg-white shadow-md rounded-md p-4">
-            <h2 className="text-xl font-semibold mb-2">Job Description Input</h2>
-            <JobDescriptionInput onJDChange={handleJDChange} clear={false} onClear={() => {}} />
+          <div className="bg-card text-card-foreground shadow-md rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Job Description Input</h2>
+            <JobDescriptionInput
+              onJDChange={handleJDChange}
+              clear={clearJDTrigger}
+              onClear={() => setClearJDTrigger(false)}
+            />
           </div>
 
           {/* Resume Upload Section */}
-          <div className="bg-white shadow-md rounded-md p-4">
-            <h2 className="text-xl font-semibold mb-2">Resume Upload</h2>
+          <div className="bg-card text-card-foreground shadow-md rounded-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Resume Upload</h2>
             <ResumeUpload
               onResumesChange={handleResumesChange}
-              onStart={handleStart}
-              jobDescription={jobDescription}
-              setValid={setValid}
-              onReset={() => {}}
-              clear={false}
-              onClear={() => {}}
+              clear={clearResumesTrigger}
+              onClear={() => setClearResumesTrigger(false)}
             />
-            <Button
-              onClick={() => handleStart(jobDescription, resumesText)}
-              disabled={!isStartActive || isResultsDisplayed}
-            >
-              Start
-            </Button>
           </div>
         </div>
 
         {/* Start and Reset Buttons */}
-        <div className="flex justify-between mt-4">
-          
+        <div className="flex justify-center mt-6 gap-4">
+          <Button
+            onClick={() => handleStart(jobDescription, resumesText)}
+            disabled={!isStartActive || isResultsDisplayed}
+            aria-label="Start analysis"
+          >
+            Start
+          </Button>
           <Button
             variant="outline"
             onClick={handleReset}
             disabled={!isResetActive}
+            aria-label="Reset inputs and results"
           >
             Reset
           </Button>
@@ -192,20 +213,31 @@ export default function Home() {
 
         {/* Results Display Section */}
         {isResultsDisplayed && (
-          <div className="bg-white shadow-md rounded-md p-4 mt-4">
-            <h2 className="text-xl font-semibold mb-2">Results</h2>
+          <div className="bg-card text-card-foreground shadow-md rounded-lg p-6 mt-6">
+            <h2 className="text-xl font-semibold mb-4">Results</h2>
             {results.length === 0 && jobDescription && resumesText ? (
               <Alert>
-                <Icons.fileUpload className="h-4 w-4"/>
-                <AlertTitle>Analyzing Resumes.</AlertTitle>
-                <AlertDescription>Please wait while the resumes are being analyzed.</AlertDescription>
+                <Icons.loader className="h-4 w-4 animate-spin" />
+                <AlertTitle>Analyzing Resumes</AlertTitle>
+                <AlertDescription>
+                  Please wait while the resumes are being analyzed.
+                </AlertDescription>
               </Alert>
             ) : (
-              <ResultsDisplay jobDescription={jobDescription} resumesText={resumesText} setResults={setResults} />
+              <ResultsDisplay
+                jobDescription={jobDescription}
+                resumesText={resumesText}
+                setResults={setResults}
+                isTriggered={isResultsDisplayed} // Trigger fetch only when results should be displayed
+              />
             )}
             {results.length > 0 && (
               <div className="flex justify-end mt-4">
-                <Button variant="secondary" onClick={handleDownload}>
+                <Button
+                  variant="secondary"
+                  onClick={handleDownload}
+                  aria-label="Download results as Excel file"
+                >
                   Download XLS
                 </Button>
               </div>
@@ -213,7 +245,10 @@ export default function Home() {
           </div>
         )}
       </div>
+      {/* Toaster for displaying notifications */}
+      {/* <Toaster /> */}
     </div>
   );
 }
 
+    
