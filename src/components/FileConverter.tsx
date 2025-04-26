@@ -8,14 +8,16 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Icons } from '@/components/icons';
 import { useToast } from '@/hooks/use-toast';
 import mammoth from 'mammoth/mammoth.browser'; // For DOCX
-import * as pdfjsLib from 'pdfjs-dist/build/pdf';
+import * as pdfjsLib from 'pdfjs-dist';
 
-// Set worker source for pdf.js
-// Use a known working version from the installed package.json.
-// If pdfjs-dist version changes, this might need updating.
-// The error log reported version 4.10.38, while package.json has 4.4.168. Using the package.json version explicitly.
-const PDFJS_VERSION = '4.4.168'; // As per package.json
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.js`;
+// Dynamically import the worker entry point
+// This tells the bundler (like Webpack used by Next.js) to handle the worker file.
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+  ).toString();
+}
 
 
 interface FileConverterProps {}
@@ -37,7 +39,7 @@ const FileConverter: React.FC<FileConverterProps> = () => {
       ];
        const fileExtension = file.name.split('.').pop()?.toLowerCase();
 
-       if (!fileExtension || !['pdf', 'docx'].includes(fileExtension) || !allowedTypes.includes(file.type)) {
+       if (!fileExtension || !['pdf', 'docx'].includes(fileExtension)) { // Removed check for allowedTypes.includes(file.type) as it can be unreliable
          const errorMsg = `Invalid file type: "${file.name}". Please upload a PDF or DOCX file for conversion.`;
          setConversionError(errorMsg);
          toast({ title: "Error", description: errorMsg, variant: "destructive" });
@@ -77,6 +79,7 @@ const FileConverter: React.FC<FileConverterProps> = () => {
         for (let i = 1; i <= numPages; i++) {
           const page = await pdf.getPage(i);
           const textContentPage = await page.getTextContent();
+          // Ensure item.str exists before joining
           const pageText = textContentPage.items.map(item => ('str' in item ? item.str : '')).join(' ');
           fullText += pageText + '\n'; // Add newline between pages
         }
@@ -126,7 +129,7 @@ const FileConverter: React.FC<FileConverterProps> = () => {
                ref={fileInputRef}
                className="hidden"
                aria-label="Upload PDF or DOCX File for Conversion"
-               suppressHydrationWarning={true} // Added suppressHydrationWarning
+               suppressHydrationWarning // Added suppressHydrationWarning
            />
            <label
                htmlFor="fileConverterInput"
@@ -134,16 +137,16 @@ const FileConverter: React.FC<FileConverterProps> = () => {
                role="button"
                tabIndex={0}
                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
-               suppressHydrationWarning={true}
+               suppressHydrationWarning
            >
                <Icons.fileUp className="mr-2 h-4 w-4" /> {/* Changed icon */}
                Select File (PDF/DOCX)
            </label>
-           {inputFile && <span className="text-sm truncate" title={inputFile.name} suppressHydrationWarning={true}>Selected: {inputFile.name}</span>}
+           {inputFile && <span className="text-sm truncate" title={inputFile.name} suppressHydrationWarning>Selected: {inputFile.name}</span>}
        </div>
 
       {conversionError && (
-        <Alert variant="destructive" suppressHydrationWarning={true}>
+        <Alert variant="destructive" suppressHydrationWarning>
           <Icons.alertCircle className="h-4 w-4" />
           <AlertTitle>Conversion Error</AlertTitle>
           <AlertDescription>{conversionError}</AlertDescription>
@@ -154,7 +157,7 @@ const FileConverter: React.FC<FileConverterProps> = () => {
         onClick={handleConvertAndDownload}
         disabled={!inputFile || isConverting}
         aria-label="Convert to TXT and Download"
-        suppressHydrationWarning={true}
+        suppressHydrationWarning
       >
         {isConverting ? (
           <>
