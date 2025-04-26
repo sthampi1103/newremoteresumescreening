@@ -380,26 +380,32 @@ export default function Home() {
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 512 512"
           className="h-20 w-auto rounded-md shadow-md mb-2 object-contain" // Keep styling similar
-          fill="hsl(25, 75%, 65%)" // Approximate color from image
         >
           <defs>
             <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{ stopColor: 'hsl(25, 85%, 75%)', stopOpacity: 1 }} />
-              <stop offset="100%" style={{ stopColor: 'hsl(25, 65%, 55%)', stopOpacity: 1 }} />
+              {/* Adjusted gradient stops to match the image more closely */}
+              <stop offset="0%" style={{ stopColor: 'hsl(25, 80%, 70%)', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: 'hsl(25, 70%, 50%)', stopOpacity: 1 }} />
             </linearGradient>
              <linearGradient id="grad2" x1="100%" y1="0%" x2="0%" y2="100%">
-               <stop offset="0%" style={{ stopColor: 'hsl(25, 85%, 75%)', stopOpacity: 0.8 }} />
-               <stop offset="100%" style={{ stopColor: 'hsl(25, 65%, 55%)', stopOpacity: 0.8 }} />
+               {/* Adjusted gradient stops to match the image more closely */}
+               <stop offset="0%" style={{ stopColor: 'hsl(25, 80%, 70%)', stopOpacity: 0.8 }} />
+               <stop offset="100%" style={{ stopColor: 'hsl(25, 70%, 50%)', stopOpacity: 0.8 }} />
              </linearGradient>
           </defs>
-          <path
+          {/* Background circle with a very light peach color */}
+           <circle cx="256" cy="256" r="256" fill="hsl(30, 50%, 95%)" />
+           {/* Path approximating the curved shape */}
+           <path
             fill="url(#grad1)"
-            d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0 0 114.6 0 256s114.6 256 256 256zM138.8 144.8C180.2 105.8 240.1 83 304.1 83c39.8 0 76.4 11.8 106.9 31.9-30.6 17.9-65.1 29.4-101.8 33.9-40.2 4.9-80.8 2.1-119.1-8.6-17.5-4.9-34.4-10.7-50.1-17.4zm234.4 222.4c-41.4 39-101.3 61.8-165.3 61.8-39.8 0-76.4-11.8-106.9-31.9 30.6-17.9 65.1-29.4 101.8-33.9 40.2-4.9 80.8-2.1 119.1 8.6 17.5 4.9 34.4 10.7 50.1 17.4z"
+            d="M 50.2,256 C 50.2,142.2 142.2,50.2 256,50.2 C 369.8,50.2 461.8,142.2 461.8,256 C 461.8,369.8 369.8,461.8 256,461.8 C 142.2,461.8 50.2,369.8 50.2,256 Z M 100,256 C 100,167.9 167.9,100 256,100 C 344.1,100 412,167.9 412,256 C 412,280 405,302.5 393.5,322 C 357.1,300.9 309.5,288 256,288 C 202.5,288 154.9,300.9 118.5,322 C 107,302.5 100,280 100,256 Z"
+            transform="rotate(-20 256 256)"
           />
-          <path
-              fill="url(#grad2)"
-              d="M108.9 304.1C83 240.1 105.8 180.2 144.8 138.8c4.9-17.5 10.7-34.4 17.4-50.1 17.9-30.6 29.4-65.1 33.9-101.8 4.9-40.2 2.1-80.8-8.6-119.1C219.6 44.2 237.4 32 256 32s36.4 12.2 51.9 29.9c10.7 38.3 13.5 78.9 8.6 119.1-4.5 36.7-16 71.2-33.9 101.8-6.7 15.7-12.5 32.6-17.4 50.1-39 41.4-61.8 101.3-61.8 165.3 0 18.6-12.2 36.4-29.9 51.9-38.3-10.7-78.9-13.5-119.1-8.6-36.7 4.5-71.2 16-101.8 33.9-15.7 6.7-32.6 12.5-50.1 17.4 41.4-39 61.8-101.3 61.8-165.3z"
-              opacity="0.8"
+           <path
+            fill="url(#grad2)"
+            d="M 118.5,190 C 154.9,211.1 202.5,224 256,224 C 309.5,224 357.1,211.1 393.5,190 C 405,209.5 412,232 412,256 C 412,344.1 344.1,412 256,412 C 167.9,412 100,344.1 100,256 C 100,232 107,209.5 118.5,190 Z"
+            transform="rotate(-20 256 256)"
+            opacity="0.8"
             />
 
         </svg>
