@@ -1,4 +1,4 @@
-import {ArrowRight, Check, ChevronsUpDown, Circle, Copy, Edit, ExternalLink, File, HelpCircle, Home, Loader2, Mail, MessageSquare, Moon, Plus, PlusCircle, Search, Server, Settings, Share2, Shield, Sun, Trash, User, X, Workflow, FileUp, Loader, AlertCircle, FileText, Play, RefreshCw, Wand } from 'lucide-react'; // Added Play, RefreshCw (for reset), Wand
+import {ArrowRight, Check, ChevronsUpDown, Circle, Copy, Edit, ExternalLink, File, HelpCircle, Home, Loader2, Mail, MessageSquare, Moon, Plus, PlusCircle, Search, Server, Settings, Share2, Shield, Sun, Trash, User, X, Workflow, FileUp, Loader, AlertCircle, FileText, Play, RefreshCw, Wand, LogOut } from 'lucide-react'; // Added Play, RefreshCw (for reset), Wand, LogOut
 
 const Icons = {
   arrowRight: ArrowRight,
@@ -8,7 +8,6 @@ const Icons = {
   workflow: Workflow,
   close: X,
   copy: Copy,
-  dark: Moon,
   edit: Edit,
   externalLink: ExternalLink,
   file: File,
@@ -34,6 +33,7 @@ const Icons = {
   play: Play, // Added Play icon
   refresh: RefreshCw, // Added RefreshCw icon (alias as refresh)
   wand: Wand, // Added Wand icon for Generate Questions
+  logout: LogOut, // Added LogOut icon
 };
 
 export {Icons};

@@ -28,6 +28,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, clear, onC
      const fileReadPromises = files.map(file => readFileContent(file).catch(err => {
        console.error(`Error reading file ${file.name} for validation:`, err);
        // If a file fails to read here, maybe show a toast, but don't block validation based on other inputs
+       toast({ title: "File Read Error", description: `Could not read ${file.name}. It might be corrupted or incompatible.`, variant: "destructive" });
        return ""; // Return empty string on error during validation read
      }));
 
@@ -43,7 +44,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, clear, onC
          onResumesChange(currentCombinedText, isValid);
      });
 
-  }, [onResumesChange]); // Add dependencies
+  }, [onResumesChange, toast]); // Add dependencies
 
 
   // Effect to handle external clear signal
@@ -82,11 +83,14 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, clear, onC
     files.forEach(file => {
         const fileExtension = file.name.split('.').pop()?.toLowerCase();
         const isValidExtension = fileExtension && ['pdf', 'doc', 'docx', 'txt'].includes(fileExtension);
-        const isValidMimeType = file.type && allowedTypes.includes(file.type);
+        // Looser MIME type check - rely more on extension
+        const isValidMimeType = file.type ? allowedTypes.some(type => file.type.startsWith(type.split('/')[0])) : false;
 
-        if (isValidMimeType || isValidExtension) {
+
+        if (isValidExtension) { // Prioritize extension check
            validFiles.push(file);
         } else {
+            console.warn(`Invalid file: ${file.name}, Type: ${file.type}, Extension: ${fileExtension}`);
             invalidFileNames.push(file.name);
         }
     });
@@ -118,9 +122,19 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, clear, onC
                      console.warn(`File "${file.name}" seems empty.`);
                      resolve(""); // Resolve with empty string for empty files
                    } else {
+                     // Basic check for common unreadable characters (can be improved)
+                     if (event.target.result.includes('�')) {
+                        console.warn(`File "${file.name}" might contain unreadable characters.`);
+                        // Optionally show toast or reject here if strict text is needed
+                     }
                      resolve(event.target.result);
                    }
-              } else {
+              } else if (event.target && event.target.result instanceof ArrayBuffer) {
+                 // Handle ArrayBuffer case if necessary (e.g., for complex parsing)
+                 console.warn(`File "${file.name}" read as ArrayBuffer, attempting text decode failed.`);
+                 reject(new Error(`Could not read ${file.name} as text.`));
+              }
+               else {
                   reject(new Error(`Failed to read content of ${file.name}`));
               }
           };
@@ -153,7 +167,7 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, clear, onC
     };
 
   return (
-    <div>
+    <div className="flex flex-col h-full"> {/* Ensure parent takes full height */}
       <div className="mb-4">
         <Input
           type="file"
@@ -177,16 +191,16 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, clear, onC
 
         {/* Display uploaded file names with remove buttons */}
         {uploadedFiles.length > 0 && (
-           <div className="mt-3 space-y-1">
+           <div className="mt-3 space-y-1 max-h-24 overflow-y-auto pr-2"> {/* Limit height and add scroll */}
              <p className="text-sm font-medium">Uploaded files:</p>
              <ul className="list-disc list-inside text-sm space-y-1">
                {uploadedFiles.map((file, index) => (
                  <li key={index} className="flex items-center justify-between group">
-                   <span className="truncate mr-2" title={file.name}>{file.name}</span>
+                   <span className="truncate mr-2 flex-1" title={file.name}>{file.name}</span> {/* Allow span to grow */}
                    <Button
                      variant="ghost"
                      size="icon"
-                     className="h-5 w-5 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                     className="h-5 w-5 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" // Prevent shrinking
                      onClick={() => removeFile(index)}
                      aria-label={`Remove ${file.name}`}
                    >
@@ -199,15 +213,18 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, clear, onC
          )}
       </div>
 
-      <Textarea
-        placeholder="Or paste resume text here (separate multiple resumes with a few blank lines)..."
-        value={textAreaContent}
-        onChange={handleTextChange}
-        className="mb-4 min-h-[150px]" // Increased min-height
-        rows={8} // Adjusted rows
-        aria-label="Resume Text Input"
-      />
-       <div className="flex justify-end">
+       {/* Make Textarea expand */}
+       <div className="flex-grow mb-4">
+         <Textarea
+           placeholder="Or paste resume text here (separate multiple resumes with a few blank lines)..."
+           value={textAreaContent}
+           onChange={handleTextChange}
+           className="min-h-[150px] h-full w-full resize-none" // Ensure it fills height and width
+           aria-label="Resume Text Input"
+         />
+       </div>
+
+       <div className="flex justify-end mt-auto"> {/* Push button to bottom */}
           <Button
             type="button"
             variant="outline"

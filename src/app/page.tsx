@@ -15,7 +15,7 @@ import {Icons} from '@/components/icons';
 import {useToast} from '@/hooks/use-toast';
 import { Toaster } from "@/components/ui/toaster";
 import { appInitialized, app } from './firebaseConfig';
-import { getAuth } from 'firebase/auth';
+import { getAuth, signOut } from 'firebase/auth'; // Import signOut
 import { rankResumes, RankResumesOutput } from '@/ai/flows/rank-resumes';
 import { generateInterviewQuestions, GenerateQuestionsOutput } from '@/ai/flows/generate-interview-questions'; // Import new flow
 
@@ -48,20 +48,32 @@ export default function Home() {
   const {toast} = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Get Firebase Auth instance
+  let auth;
+  if (appInitialized) {
+    auth = getAuth(app);
+  }
+
   // Redirect to auth page if Firebase isn't initialized or user isn't logged in
   useEffect(() => {
     if (!appInitialized) {
-      // router.push('/auth'); // Commented out as per user request
+       console.error("Firebase not initialized, cannot check auth state.");
+       // Optionally redirect or show an error message
+       // router.push('/auth'); // Consider uncommenting if non-auth access should be blocked
       return;
     }
-    const auth = getAuth(app);
+     if (!auth) {
+       console.error("Auth instance not available.");
+       // router.push('/auth'); // Consider uncommenting
+       return;
+     }
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (!user) {
          router.push('/auth');
       }
     });
     return () => unsubscribe();
-  }, [router]);
+  }, [router, appInitialized, auth]); // Add dependencies
 
 
   // Load logo from local storage on initial render
@@ -175,17 +187,34 @@ export default function Home() {
     setIsResetActive(false);
     setIsResultsDisplayed(false);
     setShowInterviewQuestions(false); // Hide questions tab
-    setLogo('/logo.png');
-    localStorage.removeItem('appLogo');
+    // Do not reset logo on general reset, only on logout or explicit logo reset
+    // setLogo('/logo.png');
+    // localStorage.removeItem('appLogo');
     setLoading(false);
     setError(null);
     setIsGeneratingQuestions(false); // Reset question loading state
     setQuestionGenerationError(null); // Reset question error state
     setIsJDValid(false);
     setAreResumesValid(false);
-    setClearJDTrigger(true);
-    setClearResumesTrigger(true);
+    setClearJDTrigger(true); // Trigger clear in child components
+    setClearResumesTrigger(true); // Trigger clear in child components
     setActiveTab("results"); // Reset to default tab
+  };
+
+  const handleSignOut = async () => {
+     if (!auth) {
+       console.error("Auth instance not available for sign out.");
+       toast({ title: "Error", description: "Could not sign out.", variant: "destructive" });
+       return;
+     }
+    try {
+      await signOut(auth);
+      localStorage.removeItem('appLogo'); // Clear logo on sign out
+      router.push('/auth');
+    } catch (error) {
+      console.error("Sign out error:", error);
+       toast({ title: "Sign Out Error", description: "Failed to sign out.", variant: "destructive" });
+    }
   };
 
   const handleClearComplete = useCallback((type: 'jd' | 'resumes') => {
@@ -358,13 +387,26 @@ export default function Home() {
 
     fetchData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isResultsDisplayed, jobDescription, resumesText]); // Keep dependencies as they are
+  }, [isResultsDisplayed]); // Only trigger when isResultsDisplayed changes
 
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Banner */}
-      <div className="bg-primary text-primary-foreground p-4 flex flex-col items-center shadow-md">
+       <div className="relative bg-primary text-primary-foreground p-4 flex flex-col items-center shadow-md">
+         {/* Logout Button Top Right */}
+         <div className="absolute top-4 right-4">
+           <Button
+             variant="secondary"
+             onClick={handleSignOut}
+             aria-label="Logout"
+             suppressHydrationWarning={true}
+             disabled={!auth} // Disable if auth isn't ready
+           >
+             <Icons.logout className="mr-2 h-4 w-4" /> Logout
+           </Button>
+         </div>
+
         <input
           type="file"
           accept="image/*"
