@@ -35,8 +35,9 @@ export const signIn = async (email: string, password: string): Promise<void> => 
      try {
        await signInWithEmailAndPassword(auth, email, password);
      } catch (error: any) {
-       console.error("Signin error:", error.message, error.code);
-       throw error;
+       // Error is caught and handled in handleSubmit, logging here might be redundant
+       // console.error("Signin error:", error.message, error.code);
+       throw error; // Re-throw the error to be handled by the calling function (handleSubmit)
      }
   } else {
     console.error("Firebase not initialized. Cannot sign in.");
@@ -77,6 +78,7 @@ const AuthPage = ({}: AuthPageProps) => {
         setError('Invalid credentials');
       } else {
         setError('An error occurred. Please try again.');
+        console.error("Unhandled Auth Error:", err); // Log unexpected errors
       }
     }
   };
