@@ -214,17 +214,19 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onResumesChange, clear, onC
       </div>
 
        {/* Make Textarea expand */}
-       <div className="flex-grow mb-4">
+       {/* Removed flex-grow from this div, let the textarea define its height based on content and min-height */}
+       <div className="mb-4">
          <Textarea
            placeholder="Or paste resume text here (separate multiple resumes with a few blank lines)..."
            value={textAreaContent}
            onChange={handleTextChange}
-           className="min-h-[150px] h-full w-full resize-none" // Ensure it fills height and width
+           className="min-h-[150px] w-full resize-y" // Use resize-y to allow vertical resize by user
            aria-label="Resume Text Input"
          />
        </div>
 
-       <div className="flex justify-end mt-auto"> {/* Push button to bottom */}
+       {/* Button container: Use margin-top instead of margin-top: auto */}
+       <div className="flex justify-end mt-4">
           <Button
             type="button"
             variant="outline"
