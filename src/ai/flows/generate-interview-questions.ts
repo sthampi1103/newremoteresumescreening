@@ -24,9 +24,9 @@ const QnAPairSchema = z.object({
 
 const GenerateQnAOutputSchema = z.object({
    qna: z.array(QnAPairSchema)
-    .max(10) // Ensure a maximum of 10 Q&A pairs
+    .max(25) // Ensure a maximum of 25 Q&A pairs
     .describe(
-      'An array of up to 10 relevant interview questions and their model answers based on the job description.'
+      'An array of up to 25 relevant interview questions and their model answers based on the job description.'
     ),
 });
 export type GenerateQnAOutput = z.infer<typeof GenerateQnAOutputSchema>;
@@ -45,12 +45,12 @@ const generateQnAPrompt = ai.definePrompt({
   output: {
     schema: GenerateQnAOutputSchema,
   },
-  prompt: `You are an expert hiring manager designing interview assessments. Based on the following job description, generate a list of insightful interview questions (maximum 10) to assess a candidate's suitability for the role. For each question, provide a model answer outlining the key points or qualities you would look for in an ideal candidate's response. Focus on questions that evaluate skills, experience, and cultural fit mentioned in the description.
+  prompt: `You are an expert hiring manager designing interview assessments. Based on the following job description, generate a list of insightful interview questions (maximum 25) to assess a candidate's suitability for the role. For each question, provide a model answer outlining the key points or qualities you would look for in an ideal candidate's response. Focus on questions that evaluate skills, experience, and cultural fit mentioned in the description.
 
 Job Description:
 {{{jobDescription}}}
 
-Provide the output as a JSON object with a single key "qna" containing an array of objects. Each object in the array should have two keys: "question" (the interview question as a string) and "answer" (the model answer as a string). Ensure a maximum of 10 question-answer pairs. Example format: { "qna": [ { "question": "...", "answer": "..." }, { "question": "...", "answer": "..." } ] }`,
+Provide the output as a JSON object with a single key "qna" containing an array of objects. Each object in the array should have two keys: "question" (the interview question as a string) and "answer" (the model answer as a string). Ensure a maximum of 25 question-answer pairs. Example format: { "qna": [ { "question": "...", "answer": "..." }, { "question": "...", "answer": "..." } ] }`,
 });
 
 const generateQnAFlow = ai.defineFlow<
@@ -73,8 +73,8 @@ const generateQnAFlow = ai.defineFlow<
 
     const {output} = await generateQnAPrompt(input);
     // Ensure output conforms, though the prompt requests it
-    if (output && output.qna && output.qna.length > 10) {
-      output.qna = output.qna.slice(0, 10);
+    if (output && output.qna && output.qna.length > 25) {
+      output.qna = output.qna.slice(0, 25);
     }
     return output || { qna: [] }; // Return empty array if output is somehow null
   }
