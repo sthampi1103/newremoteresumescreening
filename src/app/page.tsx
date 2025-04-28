@@ -24,7 +24,7 @@ import { Separator } from '@/components/ui/separator'; // Import Separator
 // Note: If you encounter a runtime error like "Cannot read properties of null (reading 'type')"
 // originating from a browser extension (e.g., chrome-extension://.../inpage.js),
 // it's likely caused by the extension interfering with the page, not a bug in this application.
-// Try disabling the problematic browser extension (like crypto wallets) and reloading the page.
+// Try disabling the problematic browser extension (like crypto wallets or ad blockers) and reloading the page.
 
 export default function Home() {
   const [jobDescription, setJobDescription] = useState('');
@@ -154,8 +154,8 @@ export default function Home() {
     setResumesText('');
     setResults([]);
     setInterviewQuestions([]); // Reset questions
-    setIsStartActive(false);
-    setIsResetActive(false);
+    setIsStartActive(false); // Will be recalculated by useEffect
+    setIsResetActive(false); // Will be recalculated by useEffect
     setIsResultsDisplayed(false);
     setShowInterviewQuestions(false); // Hide questions tab
     setLoading(false);
@@ -168,6 +168,7 @@ export default function Home() {
     setClearResumesTrigger(true); // Trigger clear in child components
     setActiveTab("results"); // Reset to default tab
   };
+
 
   const handleSignOut = async () => {
      if (!auth) {
