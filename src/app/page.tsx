@@ -8,7 +8,7 @@ import {Button} from '@/components/ui/button';
 import JobDescriptionInput from '@/components/JobDescriptionInput';
 import ResumeUpload from '@/components/ResumeUpload';
 import ResultsDisplay from '@/components/ResultsDisplay';
-import InterviewQuestionsDisplay from '@/components/InterviewQuestionsDisplay'; // Import new component
+import InterviewQnADisplay from '@/components/InterviewQuestionsDisplay'; // Import updated component
 import FileConverter from '@/components/FileConverter'; // Import new component
 import {Alert, AlertDescription, AlertTitle} from '@/components/ui/alert';
 import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/components/ui/tabs'; // Import Tabs
@@ -18,7 +18,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { appInitialized, app } from './firebaseConfig';
 import { getAuth, signOut } from 'firebase/auth'; // Import signOut
 import { rankResumes, RankResumesOutput } from '@/ai/flows/rank-resumes';
-import { generateInterviewQuestions, GenerateQuestionsOutput } from '@/ai/flows/generate-interview-questions'; // Import new flow
+import { generateInterviewQnA, GenerateQnAOutput } from '@/ai/flows/generate-interview-questions'; // Import updated flow
 import { Separator } from '@/components/ui/separator'; // Import Separator
 
 // Note: If you encounter a runtime error like "Cannot read properties of null (reading 'type')"
@@ -30,17 +30,17 @@ export default function Home() {
   const [jobDescription, setJobDescription] = useState('');
   const [resumesText, setResumesText] = useState('');
   const [results, setResults] = useState<RankResumesOutput>([]); // Use correct type
-  const [interviewQuestions, setInterviewQuestions] = useState<string[]>([]); // State for questions
+  const [interviewQnA, setInterviewQnA] = useState<GenerateQnAOutput['qna']>([]); // State for Q&A pairs
   const [isStartActive, setIsStartActive] = useState(false);
   const [isResetActive, setIsResetActive] = useState(false);
   const [isResultsDisplayed, setIsResultsDisplayed] = useState(false);
-  const [showInterviewQuestions, setShowInterviewQuestions] = useState(false); // State to control question tab visibility
+  const [showInterviewQnA, setShowInterviewQnA] = useState(false); // State to control Q&A tab visibility
   const [clearJDTrigger, setClearJDTrigger] = useState(false);
   const [clearResumesTrigger, setClearResumesTrigger] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false); // Loading state for questions
-  const [questionGenerationError, setQuestionGenerationError] = useState<string | null>(null); // Error state for questions
+  const [isGeneratingQnA, setIsGeneratingQnA] = useState(false); // Loading state for Q&A
+  const [qnaGenerationError, setQnAGenerationError] = useState<string | null>(null); // Error state for Q&A
   const [isJDValid, setIsJDValid] = useState(false);
   const [areResumesValid, setAreResumesValid] = useState(false);
   const [activeTab, setActiveTab] = useState("results"); // State for active tab
@@ -86,10 +86,10 @@ export default function Home() {
       jobDescription.trim() !== '' ||
       resumesText.trim() !== '' ||
       results.length > 0 ||
-      interviewQuestions.length > 0 || // Consider questions for reset
-      isResultsDisplayed || showInterviewQuestions; // Consider if questions are shown
+      interviewQnA.length > 0 || // Consider Q&A for reset
+      isResultsDisplayed || showInterviewQnA; // Consider if Q&A are shown
     setIsResetActive(shouldResetBeActive);
-  }, [jobDescription, resumesText, results, interviewQuestions, isJDValid, areResumesValid, isResultsDisplayed, showInterviewQuestions]);
+  }, [jobDescription, resumesText, results, interviewQnA, isJDValid, areResumesValid, isResultsDisplayed, showInterviewQnA]);
 
   const handleJDChange = (jd: string, isValid: boolean) => {
     setJobDescription(jd);
@@ -119,33 +119,33 @@ export default function Home() {
     // ResultsDisplay component logic is now within this component's useEffect
   };
 
-   const handleGenerateQuestions = async () => {
+   const handleGenerateQnA = async () => { // Renamed handler
       if (!isJDValid) {
           toast({
               title: "Job Description Missing",
-              description: "Please provide a job description to generate questions.",
+              description: "Please provide a job description to generate Q&A.",
               variant: "destructive",
           });
           return;
       }
-      setIsGeneratingQuestions(true);
-      setQuestionGenerationError(null);
-      setInterviewQuestions([]); // Clear previous questions
-      setShowInterviewQuestions(true); // Indicate questions tab should be visible
-      setActiveTab("questions"); // Switch to questions tab
+      setIsGeneratingQnA(true); // Use new loading state
+      setQnAGenerationError(null); // Use new error state
+      setInterviewQnA([]); // Clear previous Q&A
+      setShowInterviewQnA(true); // Indicate Q&A tab should be visible
+      setActiveTab("questions"); // Switch to questions tab (assuming tab value remains 'questions')
 
       try {
-          const output: GenerateQuestionsOutput = await generateInterviewQuestions({ jobDescription });
-          setInterviewQuestions(output.questions || []);
-          if (!output.questions || output.questions.length === 0) {
-            setQuestionGenerationError("No questions were generated. The job description might be too short or unclear.");
+          const output: GenerateQnAOutput = await generateInterviewQnA({ jobDescription }); // Call updated flow
+          setInterviewQnA(output.qna || []); // Set Q&A pairs
+          if (!output.qna || output.qna.length === 0) {
+            setQnAGenerationError("No Q&A were generated. The job description might be too short or unclear.");
           }
       } catch (err: any) {
-          console.error("Error generating interview questions:", err);
-          setQuestionGenerationError(err.message || "An error occurred while generating questions.");
-          setInterviewQuestions([]); // Clear questions on error
+          console.error("Error generating interview Q&A:", err);
+          setQnAGenerationError(err.message || "An error occurred while generating Q&A.");
+          setInterviewQnA([]); // Clear Q&A on error
       } finally {
-          setIsGeneratingQuestions(false);
+          setIsGeneratingQnA(false); // Update loading state
       }
    };
 
@@ -153,15 +153,15 @@ export default function Home() {
     setJobDescription('');
     setResumesText('');
     setResults([]);
-    setInterviewQuestions([]); // Reset questions
+    setInterviewQnA([]); // Reset Q&A
     setIsStartActive(false); // Will be recalculated by useEffect
     setIsResetActive(false); // Will be recalculated by useEffect
     setIsResultsDisplayed(false);
-    setShowInterviewQuestions(false); // Hide questions tab
+    setShowInterviewQnA(false); // Hide Q&A tab
     setLoading(false);
     setError(null);
-    setIsGeneratingQuestions(false); // Reset question loading state
-    setQuestionGenerationError(null); // Reset question error state
+    setIsGeneratingQnA(false); // Reset QnA loading state
+    setQnAGenerationError(null); // Reset QnA error state
     setIsJDValid(false);
     setAreResumesValid(false);
     setClearJDTrigger(true); // Trigger clear in child components
@@ -287,11 +287,11 @@ export default function Home() {
     URL.revokeObjectURL(url);
   };
 
-  const handleDownloadQuestionsPDF = () => {
-     if (interviewQuestions.length === 0) {
+  const handleDownloadQnAPDF = () => { // Renamed function
+     if (interviewQnA.length === 0) {
          toast({
-             title: "No Questions",
-             description: "There are no interview questions to download.",
+             title: "No Q&A",
+             description: "There are no interview Q&A to download.",
              variant: "destructive",
          });
          return;
@@ -299,27 +299,45 @@ export default function Home() {
 
      const doc = new jsPDF();
      doc.setFontSize(16);
-     doc.text("Interview Questions", 10, 10);
-     doc.setFontSize(12);
+     doc.text("Interview Questions & Answers", 10, 10);
 
-     let yPos = 25; // Start position for questions
+     let yPos = 25; // Start position for Q&A
      const pageHeight = doc.internal.pageSize.height;
      const margin = 10;
+     const questionAnswerSpacing = 3;
+     const pairSpacing = 8;
 
-     interviewQuestions.forEach((question, index) => {
-         const textLines = doc.splitTextToSize(`${index + 1}. ${question}`, doc.internal.pageSize.width - margin * 2);
-         const textHeight = textLines.length * (doc.getLineHeight() / doc.internal.scaleFactor);
+     interviewQnA.forEach((item, index) => {
+         doc.setFontSize(12);
+         doc.setFont(undefined, 'bold'); // Make question bold
+         const questionLines = doc.splitTextToSize(`Q${index + 1}: ${item.question}`, doc.internal.pageSize.width - margin * 2);
+         const questionHeight = questionLines.length * (doc.getLineHeight() / doc.internal.scaleFactor);
 
-         if (yPos + textHeight > pageHeight - margin) {
+         if (yPos + questionHeight > pageHeight - margin) {
              doc.addPage();
              yPos = margin; // Reset yPos for new page
          }
 
-         doc.text(textLines, margin, yPos);
-         yPos += textHeight + 5; // Add some space between questions
+         doc.text(questionLines, margin, yPos);
+         yPos += questionHeight + questionAnswerSpacing;
+
+         doc.setFont(undefined, 'normal'); // Reset font style for answer
+         doc.setFontSize(10); // Slightly smaller font for answer
+         doc.setTextColor(100); // Muted color for answer text
+         const answerLines = doc.splitTextToSize(`A: ${item.answer}`, doc.internal.pageSize.width - margin * 2 - 5); // Slightly indent answer
+         const answerHeight = answerLines.length * (doc.getLineHeight() / doc.internal.scaleFactor);
+
+          if (yPos + answerHeight > pageHeight - margin) {
+              doc.addPage();
+              yPos = margin; // Reset yPos for new page
+          }
+
+         doc.text(answerLines, margin + 5, yPos); // Indent answer text
+         yPos += answerHeight + pairSpacing; // Add space after the answer
+         doc.setTextColor(0); // Reset text color
      });
 
-     doc.save('interview_questions.pdf');
+     doc.save('interview_qna.pdf'); // Save as Q&A PDF
   };
 
 
@@ -433,23 +451,23 @@ export default function Home() {
                 onClear={() => handleClearComplete('jd')}
               />
             </div>
-             {/* Generate Questions Button */}
+             {/* Generate Q&A Button */}
              <Button
-                onClick={handleGenerateQuestions}
-                disabled={!isJDValid || isGeneratingQuestions}
-                aria-label="Generate interview questions"
+                onClick={handleGenerateQnA} // Use new handler
+                disabled={!isJDValid || isGeneratingQnA} // Use new loading state
+                aria-label="Generate interview Q&A"
                 className="mt-4"
                 suppressHydrationWarning={true}
               >
-                 {isGeneratingQuestions ? (
+                 {isGeneratingQnA ? ( // Use new loading state
                   <>
                     <Icons.loader className="mr-2 h-4 w-4 animate-spin" />
                     Generating...
                   </>
                 ) : (
                   <>
-                   <Icons.wand className="mr-2 h-4 w-4" /> {/* Consider an appropriate icon */}
-                   Generate Questions
+                   <Icons.wand className="mr-2 h-4 w-4" />
+                   Generate Q&A {/* Updated button text */}
                  </>
                 )}
               </Button>
@@ -499,12 +517,13 @@ export default function Home() {
         </div>
 
         {/* Results and Questions Display Section */}
-        {(isResultsDisplayed || showInterviewQuestions) && (
+        {(isResultsDisplayed || showInterviewQnA) && (
           <div className="bg-card text-card-foreground shadow-md rounded-lg p-6 mt-6">
              <Tabs value={activeTab} onValueChange={setActiveTab}>
                <TabsList className="grid w-full grid-cols-2">
                  <TabsTrigger value="results" disabled={!isResultsDisplayed}>Resume Ranking</TabsTrigger>
-                 <TabsTrigger value="questions" disabled={!showInterviewQuestions}>Interview Questions</TabsTrigger>
+                 {/* Keep value as "questions" for simplicity, but text is "Interview Q&A" */}
+                 <TabsTrigger value="questions" disabled={!showInterviewQnA}>Interview Q&amp;A</TabsTrigger>
                </TabsList>
                {/* Results Tab */}
                <TabsContent value="results">
@@ -544,41 +563,41 @@ export default function Home() {
                   ): null /* Don't show anything if not triggered */}
                </TabsContent>
 
-               {/* Interview Questions Tab */}
+               {/* Interview Q&A Tab */}
                 <TabsContent value="questions">
-                  <h2 className="text-xl font-semibold mb-4 sr-only">Interview Questions</h2> {/* Title handled by TabTrigger */}
-                   {isGeneratingQuestions ? (
+                  <h2 className="text-xl font-semibold mb-4 sr-only">Interview Q&amp;A</h2> {/* Title handled by TabTrigger */}
+                   {isGeneratingQnA ? ( // Use new loading state
                      <Alert>
                        <Icons.loader className="h-4 w-4 animate-spin" />
-                       <AlertTitle>Generating Questions</AlertTitle>
+                       <AlertTitle>Generating Q&amp;A</AlertTitle> {/* Updated title */}
                        <AlertDescription>
-                         Please wait while interview questions are being generated...
+                         Please wait while interview Q&amp;A are being generated... {/* Updated description */}
                        </AlertDescription>
                      </Alert>
-                   ) : questionGenerationError ? (
+                   ) : qnaGenerationError ? ( // Use new error state
                         <Alert variant="destructive">
                           <Icons.alertCircle className="h-4 w-4" />
-                          <AlertTitle>Error Generating Questions</AlertTitle>
-                          <AlertDescription>{questionGenerationError}</AlertDescription>
+                          <AlertTitle>Error Generating Q&amp;A</AlertTitle> {/* Updated title */}
+                          <AlertDescription>{qnaGenerationError}</AlertDescription>
                         </Alert>
-                   ) : interviewQuestions.length > 0 ? (
+                   ) : interviewQnA.length > 0 ? ( // Check new state
                      <>
-                       <InterviewQuestionsDisplay questions={interviewQuestions} />
+                       <InterviewQnADisplay qna={interviewQnA} /> {/* Pass Q&A pairs */}
                        <div className="flex justify-end mt-4">
                          <Button
                            variant="secondary"
-                           onClick={handleDownloadQuestionsPDF}
-                           aria-label="Download questions as PDF file"
+                           onClick={handleDownloadQnAPDF} // Use updated download handler
+                           aria-label="Download Q&A as PDF file"
                            suppressHydrationWarning={true}
                          >
-                           <Icons.fileText className="mr-2 h-4 w-4" /> {/* Use FileText icon */}
+                           <Icons.fileText className="mr-2 h-4 w-4" />
                            Download PDF
                          </Button>
                        </div>
                      </>
-                   ) : showInterviewQuestions ? (
-                     // Show if triggered but no questions (and not loading/error)
-                    <p className="text-center text-muted-foreground mt-4">No interview questions to display.</p>
+                   ) : showInterviewQnA ? ( // Check if tab should be shown
+                     // Show if triggered but no Q&A (and not loading/error)
+                    <p className="text-center text-muted-foreground mt-4">No interview Q&amp;A to display.</p>
                    ) : null /* Don't show anything if not triggered */}
                 </TabsContent>
              </Tabs>

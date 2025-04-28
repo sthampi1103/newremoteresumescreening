@@ -1,77 +1,81 @@
 'use server';
 /**
- * @fileOverview Generates interview questions based on a job description.
+ * @fileOverview Generates interview questions and model answers based on a job description.
  *
- * - generateInterviewQuestions - A function that generates interview questions.
- * - GenerateQuestionsInput - The input type for the generateInterviewQuestions function.
- * - GenerateQuestionsOutput - The return type for the generateInterviewQuestions function.
+ * - generateInterviewQnA - A function that generates interview Q&A.
+ * - GenerateQnAInput - The input type for the generateInterviewQnA function.
+ * - GenerateQnAOutput - The return type for the generateInterviewQnA function.
  */
 
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 
-const GenerateQuestionsInputSchema = z.object({
+const GenerateQnAInputSchema = z.object({
   jobDescription: z
     .string()
-    .describe('The job description to generate questions for.'),
+    .describe('The job description to generate Q&A for.'),
 });
-export type GenerateQuestionsInput = z.infer<typeof GenerateQuestionsInputSchema>;
+export type GenerateQnAInput = z.infer<typeof GenerateQnAInputSchema>;
 
-const GenerateQuestionsOutputSchema = z.object({
-  questions: z
-    .array(z.string())
-    .max(10) // Ensure a maximum of 10 questions
+const QnAPairSchema = z.object({
+   question: z.string().describe('The interview question.'),
+   answer: z.string().describe('A model answer to the interview question, explaining what to look for in a candidate\'s response.'),
+});
+
+const GenerateQnAOutputSchema = z.object({
+   qna: z.array(QnAPairSchema)
+    .max(10) // Ensure a maximum of 10 Q&A pairs
     .describe(
-      'An array of up to 10 relevant interview questions based on the job description.'
+      'An array of up to 10 relevant interview questions and their model answers based on the job description.'
     ),
 });
-export type GenerateQuestionsOutput = z.infer<typeof GenerateQuestionsOutputSchema>;
+export type GenerateQnAOutput = z.infer<typeof GenerateQnAOutputSchema>;
 
-export async function generateInterviewQuestions(
-  input: GenerateQuestionsInput
-): Promise<GenerateQuestionsOutput> {
-  return generateInterviewQuestionsFlow(input);
+export async function generateInterviewQnA(
+  input: GenerateQnAInput
+): Promise<GenerateQnAOutput> {
+  return generateQnAFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'generateInterviewQuestionsPrompt',
+const generateQnAPrompt = ai.definePrompt({
+  name: 'generateQnAPrompt',
   input: {
-    schema: GenerateQuestionsInputSchema,
+    schema: GenerateQnAInputSchema,
   },
   output: {
-    schema: GenerateQuestionsOutputSchema,
+    schema: GenerateQnAOutputSchema,
   },
-  prompt: `You are an expert hiring manager. Based on the following job description, generate a list of insightful interview questions (maximum 10) to assess a candidate's suitability for the role. Focus on questions that evaluate skills, experience, and cultural fit mentioned in the description.
+  prompt: `You are an expert hiring manager designing interview assessments. Based on the following job description, generate a list of insightful interview questions (maximum 10) to assess a candidate's suitability for the role. For each question, provide a model answer outlining the key points or qualities you would look for in an ideal candidate's response. Focus on questions that evaluate skills, experience, and cultural fit mentioned in the description.
 
 Job Description:
 {{{jobDescription}}}
 
-Provide the output as a JSON object with a single key "questions" containing an array of strings (the questions), with a maximum of 10 questions.`,
+Provide the output as a JSON object with a single key "qna" containing an array of objects. Each object in the array should have two keys: "question" (the interview question as a string) and "answer" (the model answer as a string). Ensure a maximum of 10 question-answer pairs. Example format: { "qna": [ { "question": "...", "answer": "..." }, { "question": "...", "answer": "..." } ] }`,
 });
 
-const generateInterviewQuestionsFlow = ai.defineFlow<
-  typeof GenerateQuestionsInputSchema,
-  typeof GenerateQuestionsOutputSchema
+const generateQnAFlow = ai.defineFlow<
+  typeof GenerateQnAInputSchema,
+  typeof GenerateQnAOutputSchema
 >(
   {
-    name: 'generateInterviewQuestionsFlow',
-    inputSchema: GenerateQuestionsInputSchema,
-    outputSchema: GenerateQuestionsOutputSchema,
+    name: 'generateQnAFlow',
+    inputSchema: GenerateQnAInputSchema,
+    outputSchema: GenerateQnAOutputSchema,
   },
   async input => {
     // Add basic validation or refinement if needed before calling the prompt
     if (!input.jobDescription || input.jobDescription.trim().length < 50) {
         // Consider throwing an error or returning a default empty state
-        console.warn("Job description might be too short for effective question generation.");
+        console.warn("Job description might be too short for effective Q&A generation.");
         // Returning empty for now, could also throw for the UI to catch
-        return { questions: [] };
+        return { qna: [] };
     }
 
-    const {output} = await prompt(input);
+    const {output} = await generateQnAPrompt(input);
     // Ensure output conforms, though the prompt requests it
-    if (output && output.questions && output.questions.length > 10) {
-      output.questions = output.questions.slice(0, 10);
+    if (output && output.qna && output.qna.length > 10) {
+      output.qna = output.qna.slice(0, 10);
     }
-    return output || { questions: [] }; // Return empty array if output is somehow null
+    return output || { qna: [] }; // Return empty array if output is somehow null
   }
 );
