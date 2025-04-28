@@ -1,76 +1,27 @@
 'use client';
 
-import {useState} from 'react';
-import {useRouter} from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
+  RecaptchaVerifier,
   getAuth,
-  signInWithEmailAndPassword,
-  sendPasswordResetEmail, // Import the function for password reset
-  // createUserWithEmailAndPassword, // Keep import for potential future use, but functionality disabled
+  signInWithEmailAndPassword, // Import Firebase sign-in function
+  sendPasswordResetEmail, // Import Firebase password reset function
 } from 'firebase/auth';
-import {app, appInitialized} from '../firebaseConfig';
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Import Alert components
-import { Icons } from "@/components/icons"; // Import Icons for Alert
+import { app, appInitialized } from '../firebaseConfig';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Icons } from '@/components/icons';
 
-let auth;
-if (appInitialized){
-    auth = getAuth(app);
-}
-
-// Sign up function remains for potential future re-enablement, but is not called from UI
-// export const signUp = async (email: string, password: string): Promise<void> => {
-//   if (auth) {
-//     try {
-//       await createUserWithEmailAndPassword(auth, email, password);
-//     } catch (error: any) {
-//       console.error("Signup error:", error.message, error.code);
-//       throw error;
-//     }
-//   } else {
-//     console.error("Firebase not initialized. Cannot sign up.");
-//     throw new Error("Firebase not initialized");
-//   }
-// };
-
-export const signIn = async (email: string, password: string): Promise<void> => {
-  if (auth) {
-     try {
-       await signInWithEmailAndPassword(auth, email, password);
-     } catch (error: any) {
-       // Error is caught and handled in handleSubmit, logging here might be redundant
-       // console.error("Signin error:", error.message, error.code);
-       throw error; // Re-throw the error to be handled by the calling function (handleSubmit)
-     }
-  } else {
-    console.error("Firebase not initialized. Cannot sign in.");
-    throw new Error("Firebase not initialized");
-  }
-};
-
-// Function to handle sending password reset email
-export const forgotPassword = async (email: string): Promise<void> => {
-    if (auth) {
-        try {
-            await sendPasswordResetEmail(auth, email);
-        } catch (error: any) {
-            console.error("Password reset error:", error.message, error.code);
-            throw error; // Re-throw to be handled by the UI
-        }
-    } else {
-        console.error("Firebase not initialized. Cannot send password reset email.");
-        throw new Error("Firebase not initialized");
-    }
-};
-
+// Initialize auth only if app is initialized
+const auth = appInitialized ? getAuth(app) : null;
 
 type AuthPageProps = {};
 
 const AuthPage = ({}: AuthPageProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // const [isSignUp, setIsSignUp] = useState(false); // Removed isSignUp state
   const [isForgotPassword, setIsForgotPassword] = useState(false); // State for forgot password mode
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null); // State for success messages
@@ -83,22 +34,22 @@ const AuthPage = ({}: AuthPageProps) => {
     setSuccessMessage(null);
     setLoading(true);
 
-    if (!appInitialized){
+    if (!appInitialized || !auth){ // Check both appInitialized and auth instance
       setError("Firebase could not be initialized. Check your environment variables and try again.");
       setLoading(false);
       return;
     }
 
     try {
-      await signIn(email, password);
+      // Use the imported Firebase function directly
+      await signInWithEmailAndPassword(auth, email, password);
       router.push('/'); // Redirect to home page after successful login
     } catch (err: any) {
       const errorCode = err.code || 'auth/error';
-      // Removed signup-specific error handling (email-already-in-use)
       if (errorCode === 'auth/wrong-password' || errorCode === 'auth/user-not-found' || errorCode === 'auth/invalid-credential' || errorCode === 'auth/invalid-email') {
         setError('Invalid credentials. Please check your email and password or reset your password.');
       } else {
-        setError('An error occurred during login. Please try again.');
+        setError(`An error occurred during login: ${errorCode}. Please try again.`); // Show error code
         console.error("Unhandled Auth Error:", err); // Log unexpected errors
       }
     } finally {
@@ -112,26 +63,22 @@ const AuthPage = ({}: AuthPageProps) => {
      setSuccessMessage(null);
      setLoading(true);
 
-     if (!appInitialized) {
+     if (!appInitialized || !auth) { // Check both appInitialized and auth instance
          setError("Firebase could not be initialized. Check your environment variables and try again.");
          setLoading(false);
          return;
      }
 
      try {
-         await forgotPassword(email);
+         // Use the imported Firebase function directly
+         await sendPasswordResetEmail(auth, email);
          setSuccessMessage(`Password reset email sent to ${email}. Please check your inbox (and spam folder).`);
-         // Optionally clear email field or redirect/change view after success
-         // setEmail(''); // Clear email field
-         // setIsForgotPassword(false); // Go back to login view
      } catch (err: any) {
           const errorCode = err.code || 'auth/error';
-         // Check if the email is not registered or invalid format
          if (errorCode === 'auth/user-not-found' || errorCode === 'auth/invalid-email') {
-             // Provide a specific message asking the user to check the email
             setError('Email address not found or is invalid. Please enter a registered email address.');
          } else {
-            setError('An error occurred sending the password reset email. Please try again.');
+            setError(`An error occurred sending the password reset email: ${errorCode}. Please try again.`); // Show error code
             console.error("Password Reset Error:", err);
          }
      } finally {
@@ -199,7 +146,7 @@ const AuthPage = ({}: AuthPageProps) => {
                 <Button
                   className="w-full"
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !auth} // Disable if loading or auth not ready
                   suppressHydrationWarning={true}
                 >
                   {loading ? <Icons.loader className="mr-2 h-4 w-4 animate-spin" /> : <Icons.login className="mr-2 h-4 w-4" />} {/* Add login icon */}
@@ -220,17 +167,6 @@ const AuthPage = ({}: AuthPageProps) => {
                   </Button>
                </div>
                {/* Removed the toggle button for Sign Up */}
-               {/* <div className="mt-4 text-center">
-                 <Button
-                    type="button"
-                    variant="link"
-                    onClick={() => setIsSignUp(!isSignUp)}
-                    className="text-sm"
-                    suppressHydrationWarning={true}
-                  >
-                    {isSignUp ? 'Already have an account? Login' : 'Create an Account'}
-                  </Button>
-               </div> */}
             </form>
           </>
         ) : (
@@ -272,7 +208,7 @@ const AuthPage = ({}: AuthPageProps) => {
                  <Button
                     className="w-full"
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || !auth} // Disable if loading or auth not ready
                     suppressHydrationWarning={true}
                  >
                     {loading ? <Icons.loader className="mr-2 h-4 w-4 animate-spin" /> : <Icons.mail className="mr-2 h-4 w-4" />} {/* Mail icon */}
