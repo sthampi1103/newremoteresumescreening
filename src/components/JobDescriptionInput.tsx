@@ -19,7 +19,7 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
   onClear,
 }) => {
   const [jobDescription, setJobDescription] = useState('');
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState<File | null>(null); // State holds only one file or null
   const [errorMessage, setErrorMessage] = useState('');
   const {toast} = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,7 +55,7 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
+    const selectedFile = e.target.files?.[0]; // Get only the first file
     setErrorMessage(''); // Clear previous errors
 
     if (selectedFile) {
@@ -83,18 +83,18 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
       }
 
 
-      setFile(selectedFile);
-      setJobDescription('');
+      setFile(selectedFile); // Set the single selected file
+      setJobDescription(''); // Clear manual text input
 
       try {
         const fileContent = await readFileContent(selectedFile);
         if (fileContent === null) {
-            setFile(null);
+            setFile(null); // Clear file if reading failed
             validateAndNotify('');
             if (fileInputRef.current) fileInputRef.current.value = '';
         } else {
-            setJobDescription(fileContent);
-            validateAndNotify(fileContent);
+            setJobDescription(fileContent); // Set text content from file
+            validateAndNotify(fileContent); // Validate based on file content
         }
       } catch (error) {
         console.error('Error reading file:', error);
@@ -111,8 +111,10 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
          if (fileInputRef.current) fileInputRef.current.value = '';
       }
     } else {
+        // If no file is selected (e.g., user cancels dialog), clear the file state
+        // but keep existing text input if any
         setFile(null);
-        if (!jobDescription) {
+        if (!jobDescription) { // Only invalidate if text area is also empty
             validateAndNotify('');
         }
     }
@@ -132,7 +134,7 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
             const errorMsg = `File "${file.name}" appears to be empty or unreadable.`;
             setErrorMessage(errorMsg);
             toast({ title: 'File Error', description: errorMsg, variant: 'destructive' });
-            resolve(null);
+            resolve(null); // Resolve null for empty/unreadable files
           } else {
             resolve(content);
           }
@@ -151,6 +153,8 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
          reject(new Error(`File reading aborted for "${file.name}"`));
        };
 
+      // Attempt to read as text. More robust handling for PDF/DOCX would require libraries.
+      // For simplicity, relying on basic text extraction for now.
       reader.readAsText(file);
     });
   };
@@ -186,7 +190,7 @@ const JobDescriptionInput: React.FC<JobDescriptionInputProps> = ({
            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
         >
          <Icons.fileUpload className="mr-2 h-4 w-4" />
-          Upload File
+          Upload File (1 Max) {/* Indicate single file upload */}
         </label>
         {file && <span className="text-sm truncate" title={file.name}>Selected: {file.name}</span>}
       </div>
