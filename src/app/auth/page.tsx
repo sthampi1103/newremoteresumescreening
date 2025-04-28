@@ -95,8 +95,8 @@ const AuthPage = ({}: AuthPageProps) => {
     } catch (err: any) {
       const errorCode = err.code || 'auth/error';
       // Removed signup-specific error handling (email-already-in-use)
-      if (errorCode === 'auth/wrong-password' || errorCode === 'auth/user-not-found' || errorCode === 'auth/invalid-credential') {
-        setError('Invalid credentials. Please try again or reset your password.');
+      if (errorCode === 'auth/wrong-password' || errorCode === 'auth/user-not-found' || errorCode === 'auth/invalid-credential' || errorCode === 'auth/invalid-email') {
+        setError('Invalid credentials. Please check your email and password or reset your password.');
       } else {
         setError('An error occurred during login. Please try again.');
         console.error("Unhandled Auth Error:", err); // Log unexpected errors
@@ -126,8 +126,10 @@ const AuthPage = ({}: AuthPageProps) => {
          // setIsForgotPassword(false); // Go back to login view
      } catch (err: any) {
           const errorCode = err.code || 'auth/error';
+         // Check if the email is not registered or invalid format
          if (errorCode === 'auth/user-not-found' || errorCode === 'auth/invalid-email') {
-            setError('Email address not found or invalid.');
+             // Provide a specific message asking the user to check the email
+            setError('Email address not found or is invalid. Please enter a registered email address.');
          } else {
             setError('An error occurred sending the password reset email. Please try again.');
             console.error("Password Reset Error:", err);
@@ -234,7 +236,7 @@ const AuthPage = ({}: AuthPageProps) => {
         ) : (
           <>
             <h2 className="text-2xl font-bold mb-6 text-center">Reset Password</h2>
-            <p className="text-sm text-muted-foreground mb-4 text-center">Enter your email address below and we'll send you a link to reset your password.</p>
+            <p className="text-sm text-muted-foreground mb-4 text-center">Enter your registered email address below and we'll send you a link to reset your password.</p>
              {error && (
                  <Alert variant="destructive" className="mb-4">
                     <Icons.alertCircle className="h-4 w-4" />
