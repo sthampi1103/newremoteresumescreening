@@ -2,7 +2,7 @@
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { GenerateQnAOutput } from "@/ai/flows/generate-interview-questions"; // Import the updated type
-import { MessageSquareQuestion, MessageSquareText } from "lucide-react"; // Use appropriate icons
+import { MessageSquareQuote, MessageSquare } from "lucide-react"; // Use appropriate icons
 
 interface InterviewQnADisplayProps {
   qna: GenerateQnAOutput['qna']; // Expect an array of Q&A pairs
@@ -20,14 +20,14 @@ const InterviewQnADisplay: React.FC<InterviewQnADisplayProps> = ({ qna }) => {
         <AccordionItem value={`item-${index}`} key={index}>
           <AccordionTrigger className="text-left hover:no-underline">
              <div className="flex items-start space-x-2">
-                 <MessageSquareQuestion className="h-5 w-5 mt-1 flex-shrink-0" />
+                 <MessageSquareQuote className="h-5 w-5 mt-1 flex-shrink-0" />
                  <span className="flex-grow">{index + 1}. {item.question}</span>
              </div>
 
           </AccordionTrigger>
           <AccordionContent>
              <div className="flex items-start space-x-2 pl-7"> {/* Indent answer */}
-                 <MessageSquareText className="h-5 w-5 mt-1 flex-shrink-0 text-muted-foreground" />
+                 <MessageSquare className="h-5 w-5 mt-1 flex-shrink-0 text-muted-foreground" />
                  <p className="text-sm text-muted-foreground flex-grow">{item.answer}</p>
              </div>
           </AccordionContent>
