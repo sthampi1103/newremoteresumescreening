@@ -29,7 +29,7 @@ try {
 
   if (missingKeys.length > 0) {
       console.error(
-          `Firebase configuration is incomplete. Missing or empty essential environment variables: ${missingKeys.map(k => `NEXT_PUBLIC_FIREBASE_${k.replace(/([A-Z])/g, '_$1').toUpperCase()}`).join(', ')}. Please check your .env file.`
+          `Firebase configuration is incomplete. Missing or empty essential environment variables: ${missingKeys.map(k => `NEXT_PUBLIC_FIREBASE_${k.replace(/([A-Z])/g, '_$1').toUpperCase()}`).join(', ')}. Please check your .env file or environment settings.`
       );
       appInitialized = false;
       appCheckInitialized = false;
@@ -86,17 +86,28 @@ try {
 
              // Provide more specific guidance based on common errors
             if (appCheckError instanceof Error) {
+                // Check specifically for recaptcha-error or appCheck/recaptcha-error
                 if (appCheckError.message.includes('reCAPTCHA error') || (appCheckError as any).code === 'appCheck/recaptcha-error') {
                     console.error(
-                        "Hint: This 'reCAPTCHA error' might be due to an invalid site key, " +
-                        "unauthorized domain in Google Cloud Console (check http://localhost:<port> or your deployed domain), " +
-                        "incorrect App Check setup in Firebase Console, or the reCAPTCHA Enterprise API not being enabled in Google Cloud."
+                        "Hint (appCheck/recaptcha-error): This error typically indicates a configuration problem. Check the following:\n" +
+                        "1. Is the correct reCAPTCHA Enterprise Site Key in your NEXT_PUBLIC_FIREBASE_RECAPTCHA_ENTERPRISE_SITE_KEY environment variable?\n" +
+                        "2. Is your application's domain (e.g., http://localhost:xxxx or your deployed URL) listed as an authorized domain in the Google Cloud Console for this reCAPTCHA key?\n" +
+                        "3. Is the reCAPTCHA Enterprise API enabled in your Google Cloud project?\n" +
+                        "4. Is App Check correctly configured and linked to this key in the Firebase Console (Project Settings -> App Check)?\n" +
+                        "5. Are there any network issues (firewalls, proxies) blocking connection to Google services?"
                     );
                 } else if (appCheckError.message.includes('fetch') || appCheckError.message.includes('NetworkError')) {
-                    console.error("Hint: A network error occurred. Check your internet connection and ensure firewall/proxy settings allow access to Google services (gstatic.com, googleapis.com).");
-                } else {
-                     console.error("Hint: Review your Firebase project settings, App Check configuration, and the provided site key.");
+                    console.error("Hint: A network error occurred during App Check setup. Check internet connection and ensure firewall/proxy settings allow access to Google services (e.g., googleapis.com, gstatic.com).");
+                } else if (appCheckError.message.includes('invalid-argument')) {
+                     console.error("Hint: 'Invalid argument' during App Check setup often means the site key format is incorrect or there's a configuration mismatch between Firebase and Google Cloud.");
                 }
+                 else {
+                     // General App Check error
+                     console.error(`Hint: An unexpected App Check error occurred (${(appCheckError as any).code || 'unknown'}). Review Firebase project settings, App Check configuration (Firebase & Google Cloud), environment variables, and ensure the reCAPTCHA Enterprise API is enabled.`);
+                }
+            } else {
+                 // Non-Error object thrown
+                 console.error("Hint: An unexpected non-error value was thrown during App Check initialization. Review configuration.", appCheckError);
             }
       }
 
@@ -108,7 +119,7 @@ try {
          "Firebase App Check initialization skipped: " +
          "NEXT_PUBLIC_FIREBASE_RECAPTCHA_ENTERPRISE_SITE_KEY environment variable is missing. " +
          "App Check protects your backend resources from abuse. " +
-         "It's strongly recommended to configure it with a ReCaptcha Enterprise site key."
+         "It's strongly recommended to configure it with a ReCaptcha Enterprise site key for production."
        );
        appCheckInitialized = false;
     }
