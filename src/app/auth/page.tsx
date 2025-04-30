@@ -524,11 +524,13 @@ const AuthPage = ({}: AuthPageProps) => {
                console.error(`App Check/reCAPTCHA Error during password reset (${err.code}):`, err.message);
                 let userFriendlyMessage = `Password reset failed due to a security check (${err.code}). `;
                  if (err.code.includes('recaptcha-error')) {
-                     userFriendlyMessage += "There might be an issue with the reCAPTCHA setup (invalid key, domain) or network connection.";
+                     userFriendlyMessage += "There might be an issue with the reCAPTCHA setup (invalid key, domain not authorized) or network connection.";
                  } else if (err.code.includes('app-check') || err.code.includes('token-is-invalid')) {
                      userFriendlyMessage += "Ensure App Check is configured correctly (check Firebase Console, site key, debug token). Refreshing might help.";
+                 } else {
+                     userFriendlyMessage += "Please try again.";
                  }
-                setError(userFriendlyMessage + " Please try again.");
+                 setError(userFriendlyMessage + " Check console for details.");
            }
             else {
                setError(
