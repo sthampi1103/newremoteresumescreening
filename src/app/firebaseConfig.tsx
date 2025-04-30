@@ -1,7 +1,7 @@
 
 // Import the functions you need from the SDKs you need
 import { initializeApp, FirebaseApp, getApps } from "firebase/app";
-import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check"; // Updated import
 // import { getAnalytics } from "firebase/analytics"; // Analytics can be added if needed
 
 // Your web app's Firebase configuration
@@ -44,11 +44,11 @@ try {
     appInitialized = true;
     // console.log("Firebase initialized successfully."); // Optional: for debugging
 
-    // Initialize App Check
-    const recaptchaSiteKey = process.env.NEXT_PUBLIC_FIREBASE_RECAPTCHA_SITE_KEY;
+    // Initialize App Check with ReCaptcha Enterprise
+    const recaptchaEnterpriseSiteKey = process.env.NEXT_PUBLIC_FIREBASE_RECAPTCHA_ENTERPRISE_SITE_KEY; // Use Enterprise key
     const debugToken = process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_DEBUG_TOKEN; // For local testing
 
-    if (app && recaptchaSiteKey) {
+    if (app && recaptchaEnterpriseSiteKey) {
       // Set debug token if running locally and token is provided
       // IMPORTANT: Replace 'YOUR_DEBUG_TOKEN' with your actual debug token
       // or remove this block entirely for production builds.
@@ -60,18 +60,18 @@ try {
 
 
       initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider(recaptchaSiteKey),
+        provider: new ReCaptchaEnterpriseProvider(recaptchaEnterpriseSiteKey), // Use Enterprise provider
         // Optional: Set to true for automated token refresh. Default is true.
         isTokenAutoRefreshEnabled: true
       });
       appCheckInitialized = true;
-      // console.log("Firebase App Check initialized successfully."); // Optional
-    } else if (!recaptchaSiteKey) {
+      // console.log("Firebase App Check initialized successfully with ReCaptcha Enterprise."); // Optional
+    } else if (!recaptchaEnterpriseSiteKey) {
         console.warn(
          "Firebase App Check initialization skipped: " +
-         "NEXT_PUBLIC_FIREBASE_RECAPTCHA_SITE_KEY environment variable is missing. " +
+         "NEXT_PUBLIC_FIREBASE_RECAPTCHA_ENTERPRISE_SITE_KEY environment variable is missing. " + // Updated variable name
          "App Check protects your backend resources from abuse (e.g., Auth, Firestore). " +
-         "It's recommended to configure it. See Firebase documentation."
+         "It's recommended to configure it with a ReCaptcha Enterprise site key. See Firebase documentation."
        );
        appCheckInitialized = false;
     }
