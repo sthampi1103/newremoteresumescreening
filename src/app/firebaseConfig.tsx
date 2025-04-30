@@ -65,9 +65,13 @@ try {
        }
 
       try {
+          // Ensure this provider instance is created correctly.
+          // Errors here might indicate issues with the key itself or network access to Google services.
           const provider = new ReCaptchaEnterpriseProvider(recaptchaEnterpriseSiteKey);
           console.log("ReCaptchaEnterpriseProvider instance created.");
 
+          // The core App Check initialization. Errors here are often related to
+          // configuration mismatches (Firebase vs. Google Cloud) or network issues.
           initializeAppCheck(app, {
             provider: provider,
             // Optional: Set to true for automated token refresh. Default is true.
@@ -76,12 +80,23 @@ try {
 
           appCheckInitialized = true;
           console.log("Firebase App Check initialized successfully with ReCaptcha Enterprise provider.");
-      } catch (appCheckError) {
+      } catch (appCheckError: any) {
             console.error("Firebase App Check initialization failed:", appCheckError);
             appCheckInitialized = false; // Ensure state reflects failure
+
              // Provide more specific guidance based on common errors
-            if (appCheckError instanceof Error && appCheckError.message.includes('reCAPTCHA error')) {
-                console.error("Hint: This 'reCAPTCHA error' might be due to an invalid site key, unauthorized domain in Google Cloud Console, or incorrect App Check setup in Firebase.");
+            if (appCheckError instanceof Error) {
+                if (appCheckError.message.includes('reCAPTCHA error') || (appCheckError as any).code === 'appCheck/recaptcha-error') {
+                    console.error(
+                        "Hint: This 'reCAPTCHA error' might be due to an invalid site key, " +
+                        "unauthorized domain in Google Cloud Console (check http://localhost:<port> or your deployed domain), " +
+                        "incorrect App Check setup in Firebase Console, or the reCAPTCHA Enterprise API not being enabled in Google Cloud."
+                    );
+                } else if (appCheckError.message.includes('fetch') || appCheckError.message.includes('NetworkError')) {
+                    console.error("Hint: A network error occurred. Check your internet connection and ensure firewall/proxy settings allow access to Google services (gstatic.com, googleapis.com).");
+                } else {
+                     console.error("Hint: Review your Firebase project settings, App Check configuration, and the provided site key.");
+                }
             }
       }
 
@@ -107,4 +122,5 @@ try {
 
 console.log(`Initialization Status - Firebase Core: ${appInitialized}, App Check: ${appCheckInitialized}`);
 
-export { app, appInitialized, appCheckInitialized }; // Export appCheckInitialized status
+// Export appCheckInitialized status so components can check it
+export { app, appInitialized, appCheckInitialized };

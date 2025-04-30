@@ -169,7 +169,7 @@ const AuthPage = ({}: AuthPageProps) => {
      if (!appCheckInitialized) {
        console.warn("App Check not initialized. Authentication might fail if App Check is enforced.");
        // Consider showing a milder warning or proceeding cautiously
-       setError("App Check is not ready. Please wait a moment and try again.");
+       setError("App Check is not ready. Please wait a moment and try again. If the problem persists, check the console for errors.");
        setLoading(false);
        setLoadingMessage(null);
        return;
@@ -223,9 +223,9 @@ const AuthPage = ({}: AuthPageProps) => {
                 console.error(`App Check/reCAPTCHA Error during login (${err.code}):`, err.message);
                 let userFriendlyMessage = `Authentication failed due to a security check (${err.code}). `;
                 if (err.code.includes('recaptcha-error')) {
-                    userFriendlyMessage += "There might be an issue with the reCAPTCHA setup or network connection. Please try again.";
-                } else if (err.code.includes('app-check')) {
-                    userFriendlyMessage += "Ensure App Check is configured correctly and your environment is supported.";
+                    userFriendlyMessage += "There might be an issue with the reCAPTCHA setup (invalid key, domain not authorized in Google Cloud) or network connection. Please try again.";
+                } else if (err.code.includes('app-check') || err.code.includes('token-is-invalid')) {
+                    userFriendlyMessage += "Ensure App Check is configured correctly (check Firebase Console, site key, debug token if local) and your environment is supported. Refreshing the page might help.";
                 } else {
                      userFriendlyMessage += "Please try again.";
                 }
@@ -263,7 +263,7 @@ const AuthPage = ({}: AuthPageProps) => {
     }
      if (!appCheckInitialized) {
        console.warn("App Check not initialized. Sign-up might fail if App Check is enforced.");
-        setError("App Check is not ready. Please wait a moment and try again.");
+        setError("App Check is not ready. Please wait a moment and try again. If the problem persists, check the console for errors.");
         setLoading(false);
         setLoadingMessage(null);
         return;
@@ -295,9 +295,9 @@ const AuthPage = ({}: AuthPageProps) => {
                  console.error(`App Check/reCAPTCHA Error during sign up (${err.code}):`, err.message);
                  let userFriendlyMessage = `Sign up failed due to a security check (${err.code}). `;
                  if (err.code.includes('recaptcha-error')) {
-                    userFriendlyMessage += "There might be an issue with the reCAPTCHA setup or network connection. Please try again.";
-                 } else if (err.code.includes('app-check')) {
-                     userFriendlyMessage += "Ensure App Check is configured correctly and your environment is supported.";
+                    userFriendlyMessage += "There might be an issue with the reCAPTCHA setup (invalid key, domain not authorized) or network connection. Please try again.";
+                 } else if (err.code.includes('app-check') || err.code.includes('token-is-invalid')) {
+                     userFriendlyMessage += "Ensure App Check is configured correctly (check Firebase Console, site key, debug token) and your environment is supported. Refreshing might help.";
                  } else {
                      userFriendlyMessage += "Please try again.";
                  }
@@ -328,6 +328,13 @@ const AuthPage = ({}: AuthPageProps) => {
            // Optionally, try to re-render reCAPTCHA here, but it's complex and might indicate a deeper issue.
            return;
       }
+       // Check App Check initialization before proceeding with phone auth
+       if (!appCheckInitialized) {
+         console.warn("App Check not initialized. Sending MFA code might fail if App Check is enforced.");
+         setError("App Check is not ready. Please wait a moment and try again.");
+         return; // Don't proceed without App Check
+       }
+
       setError(null);
       setIsSendingMfaCode(true);
       setLoadingMessage('Sending verification code...');
@@ -360,9 +367,9 @@ const AuthPage = ({}: AuthPageProps) => {
                    console.error(`App Check/reCAPTCHA Error during MFA code sending (${err.code}):`, err.message);
                    let userFriendlyMessage = `Failed to send verification code due to a security check (${err.code}). `;
                      if (err.code.includes('recaptcha-error')) {
-                         userFriendlyMessage += "There might be an issue with the reCAPTCHA setup or network connection.";
-                     } else if (err.code.includes('app-check')) {
-                         userFriendlyMessage += "Ensure App Check is configured correctly.";
+                         userFriendlyMessage += "There might be an issue with the reCAPTCHA setup (invalid key, unauthorized domain) or network connection.";
+                     } else if (err.code.includes('app-check') || err.code.includes('token-is-invalid')) {
+                         userFriendlyMessage += "Ensure App Check is configured correctly (check Firebase Console, site key, debug token). Refreshing might help.";
                      }
                      setError(userFriendlyMessage + " Please try again.");
               } else if (err.code === 'auth/invalid-phone-number') {
@@ -404,6 +411,13 @@ const AuthPage = ({}: AuthPageProps) => {
           setError("Missing information to verify the code. Please try again.");
           return;
       }
+      // Check App Check initialization before verifying MFA code
+      if (!appCheckInitialized) {
+        console.warn("App Check not initialized. Verifying MFA code might fail if App Check is enforced.");
+        setError("App Check is not ready. Please wait a moment and try again.");
+        return; // Don't proceed without App Check
+      }
+
       setError(null);
       setIsVerifyingMfaCode(true);
       setLoadingMessage('Verifying code...');
@@ -441,9 +455,9 @@ const AuthPage = ({}: AuthPageProps) => {
                     console.error(`App Check/reCAPTCHA Error during MFA verification (${err.code}):`, err.message);
                     let userFriendlyMessage = `MFA verification failed due to a security check (${err.code}). `;
                       if (err.code.includes('recaptcha-error')) {
-                          userFriendlyMessage += "There might be an issue with the reCAPTCHA setup or network connection.";
-                      } else if (err.code.includes('app-check')) {
-                          userFriendlyMessage += "Ensure App Check is configured correctly.";
+                          userFriendlyMessage += "There might be an issue with the reCAPTCHA setup (invalid key, domain) or network connection.";
+                      } else if (err.code.includes('app-check') || err.code.includes('token-is-invalid')) {
+                          userFriendlyMessage += "Ensure App Check is configured correctly (check Firebase Console, site key, debug token). Refreshing might help.";
                       }
                      setError(userFriendlyMessage + " Please try again.");
                 }
@@ -480,7 +494,7 @@ const AuthPage = ({}: AuthPageProps) => {
      // Check App Check initialization specifically for security-sensitive operations
      if (!appCheckInitialized) {
        console.warn("App Check not initialized. Password reset might fail if App Check is enforced.");
-       setError("App Check is not ready. Please wait a moment and try again.");
+       setError("App Check is not ready. Please wait a moment and try again. If the problem persists, check the console for errors.");
        setLoading(false);
        setLoadingMessage(null);
        return;
@@ -510,9 +524,9 @@ const AuthPage = ({}: AuthPageProps) => {
                console.error(`App Check/reCAPTCHA Error during password reset (${err.code}):`, err.message);
                 let userFriendlyMessage = `Password reset failed due to a security check (${err.code}). `;
                  if (err.code.includes('recaptcha-error')) {
-                     userFriendlyMessage += "There might be an issue with the reCAPTCHA setup or network connection.";
-                 } else if (err.code.includes('app-check')) {
-                     userFriendlyMessage += "Ensure App Check is configured correctly.";
+                     userFriendlyMessage += "There might be an issue with the reCAPTCHA setup (invalid key, domain) or network connection.";
+                 } else if (err.code.includes('app-check') || err.code.includes('token-is-invalid')) {
+                     userFriendlyMessage += "Ensure App Check is configured correctly (check Firebase Console, site key, debug token). Refreshing might help.";
                  }
                 setError(userFriendlyMessage + " Please try again.");
            }
@@ -772,7 +786,7 @@ const AuthPage = ({}: AuthPageProps) => {
                         className="w-full"
                         type="button"
                         onClick={handleSendMfaCode} // Button to trigger sending code after selection
-                        disabled={!selectedMfaHint || isSendingMfaCode || !recaptchaVerifier}
+                        disabled={!selectedMfaHint || isSendingMfaCode || !recaptchaVerifier || !appCheckInitialized} // Add App Check check
                         suppressHydrationWarning={true}
                        >
                          {isSendingMfaCode ? <Icons.loader className="mr-2 h-4 w-4 animate-spin" /> : <Icons.messageSquare className="mr-2 h-4 w-4" />}
@@ -814,7 +828,7 @@ const AuthPage = ({}: AuthPageProps) => {
                            <Button
                              className="w-full"
                              type="submit"
-                             disabled={isVerifyingMfaCode}
+                             disabled={isVerifyingMfaCode || !appCheckInitialized} // Add App Check check
                              suppressHydrationWarning={true}
                            >
                              {isVerifyingMfaCode ? <Icons.loader className="mr-2 h-4 w-4 animate-spin" /> : <Icons.check className="mr-2 h-4 w-4" />}
