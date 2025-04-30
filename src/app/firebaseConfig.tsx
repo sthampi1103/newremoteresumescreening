@@ -23,22 +23,17 @@ let appCheckInitialized = false;
 
 try {
   console.log("Attempting to initialize Firebase...");
-  const requiredConfigValues = [
-    firebaseConfig.apiKey,
-    firebaseConfig.authDomain,
-    firebaseConfig.projectId,
-    firebaseConfig.storageBucket,
-    firebaseConfig.messagingSenderId,
-    firebaseConfig.appId,
-    // measurementId is optional, so not checked here
-  ];
+  // Basic check for essential config keys
+   const requiredKeys = ['apiKey', 'authDomain', 'projectId'];
+   const missingKeys = requiredKeys.filter(key => !(firebaseConfig as any)[key]);
 
-  const missingConfigKeys = Object.entries(firebaseConfig)
-      .filter(([key, value]) => requiredConfigValues.includes(value) && (!value || value.trim() === ''))
-      .map(([key]) => `NEXT_PUBLIC_FIREBASE_${key.replace(/([A-Z])/g, '_$1').toUpperCase()}`);
-
-
-  if (missingConfigKeys.length === 0) {
+  if (missingKeys.length > 0) {
+      console.error(
+          `Firebase configuration is incomplete. Missing or empty essential environment variables: ${missingKeys.map(k => `NEXT_PUBLIC_FIREBASE_${k.replace(/([A-Z])/g, '_$1').toUpperCase()}`).join(', ')}. Please check your .env file.`
+      );
+      appInitialized = false;
+      appCheckInitialized = false;
+  } else {
     // Prevent re-initialization on hot reloads in development
     if (!getApps().length) {
         console.log("Initializing new Firebase app instance.");
@@ -51,34 +46,43 @@ try {
     console.log("Firebase core app initialized successfully.");
 
     // Initialize App Check with ReCaptcha Enterprise
-    const recaptchaEnterpriseSiteKey = process.env.NEXT_PUBLIC_FIREBASE_RECAPTCHA_ENTERPRISE_SITE_KEY; // Use Enterprise key
-    const debugToken = process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_DEBUG_TOKEN; // For local testing
+    const recaptchaEnterpriseSiteKey = process.env.NEXT_PUBLIC_FIREBASE_RECAPTCHA_ENTERPRISE_SITE_KEY;
+    const debugToken = process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_DEBUG_TOKEN;
 
     if (app && recaptchaEnterpriseSiteKey) {
-        console.log("Attempting to initialize Firebase App Check...");
-      // Set debug token if running locally and token is provided
-      // IMPORTANT: Replace 'YOUR_DEBUG_TOKEN' with your actual debug token
-      // or remove this block entirely for production builds.
-       if (process.env.NODE_ENV !== 'production' && debugToken) {
-          // @ts-ignore - self is defined in browser environment
-          self.FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
-          console.log("Using Firebase App Check debug token for local development.");
+        console.log("Attempting to initialize Firebase App Check with ReCaptcha Enterprise...");
+        console.log(`Using ReCAPTCHA Enterprise Site Key: ${recaptchaEnterpriseSiteKey ? 'Provided' : 'MISSING'}`);
+
+        // Set debug token if running locally and token is provided
+        // IMPORTANT: Ensure the debug token is correctly generated and not expired.
+        // You can generate one in the Firebase Console -> App Check -> Your App -> Manage debug tokens.
+       if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production' && debugToken) {
+           console.log("Setting Firebase App Check debug token for local development:", debugToken);
+           // @ts-ignore - self is defined in browser environment
+           (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
        } else if (process.env.NODE_ENV !== 'production') {
-           console.log("App Check debug token not found or not in development mode. Production App Check will be used if configured.");
+           console.log("Firebase App Check debug token not provided or not in development environment. App Check will rely on ReCaptcha Enterprise.");
        }
 
-
       try {
+          const provider = new ReCaptchaEnterpriseProvider(recaptchaEnterpriseSiteKey);
+          console.log("ReCaptchaEnterpriseProvider instance created.");
+
           initializeAppCheck(app, {
-            provider: new ReCaptchaEnterpriseProvider(recaptchaEnterpriseSiteKey), // Use Enterprise provider
+            provider: provider,
             // Optional: Set to true for automated token refresh. Default is true.
             isTokenAutoRefreshEnabled: true
           });
+
           appCheckInitialized = true;
-          console.log("Firebase App Check initialized successfully with ReCaptcha Enterprise.");
+          console.log("Firebase App Check initialized successfully with ReCaptcha Enterprise provider.");
       } catch (appCheckError) {
             console.error("Firebase App Check initialization failed:", appCheckError);
             appCheckInitialized = false; // Ensure state reflects failure
+             // Provide more specific guidance based on common errors
+            if (appCheckError instanceof Error && appCheckError.message.includes('reCAPTCHA error')) {
+                console.error("Hint: This 'reCAPTCHA error' might be due to an invalid site key, unauthorized domain in Google Cloud Console, or incorrect App Check setup in Firebase.");
+            }
       }
 
     } else if (!app) {
@@ -87,30 +91,20 @@ try {
     } else if (!recaptchaEnterpriseSiteKey) {
         console.warn(
          "Firebase App Check initialization skipped: " +
-         "NEXT_PUBLIC_FIREBASE_RECAPTCHA_ENTERPRISE_SITE_KEY environment variable is missing. " + // Updated variable name
-         "App Check protects your backend resources from abuse (e.g., Auth, Firestore). " +
-         "It's recommended to configure it with a ReCaptcha Enterprise site key. See Firebase documentation."
+         "NEXT_PUBLIC_FIREBASE_RECAPTCHA_ENTERPRISE_SITE_KEY environment variable is missing. " +
+         "App Check protects your backend resources from abuse. " +
+         "It's strongly recommended to configure it with a ReCaptcha Enterprise site key."
        );
        appCheckInitialized = false;
     }
 
-  } else {
-    console.error(
-      "Firebase configuration is incomplete. " +
-      `Missing or empty environment variables: ${missingConfigKeys.join(', ')}. ` +
-      "Please ensure all required NEXT_PUBLIC_FIREBASE_* environment variables are set correctly in your .env file " +
-      "and the development server is restarted."
-    );
-    appInitialized = false;
-    appCheckInitialized = false;
   }
 } catch (e) {
-    console.error("Critical error during Firebase initialization:", e);
+    console.error("Critical error during Firebase or App Check initialization:", e);
     appInitialized = false;
     appCheckInitialized = false;
 }
 
-console.log(`Firebase Initialized: ${appInitialized}, App Check Initialized: ${appCheckInitialized}`);
+console.log(`Initialization Status - Firebase Core: ${appInitialized}, App Check: ${appCheckInitialized}`);
 
 export { app, appInitialized, appCheckInitialized }; // Export appCheckInitialized status
-
