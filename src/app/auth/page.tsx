@@ -231,7 +231,7 @@ const AuthPage = ({}: AuthPageProps) => {
                 }
                  else {
                      userFriendlyMessage += "Please try again. Check console for more details.";
-                }
+                 }
                 setError(userFriendlyMessage);
            } else {
               // General Firebase error
@@ -899,3 +899,4 @@ const AuthPage = ({}: AuthPageProps) => {
 };
 
 export default AuthPage;
+

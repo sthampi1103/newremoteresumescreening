@@ -58,7 +58,6 @@ try {
         // You can generate one in the Firebase Console -> App Check -> Your App -> Manage debug tokens.
        if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production' && debugToken) {
            console.log("Setting Firebase App Check debug token for local development:", debugToken);
-           // @ts-ignore - self is defined in browser environment
            (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
        } else if (process.env.NODE_ENV !== 'production') {
            console.log("Firebase App Check debug token not provided or not in development environment. App Check will rely on ReCaptcha Enterprise.");
@@ -89,12 +88,12 @@ try {
                 // Check specifically for recaptcha-error or appCheck/recaptcha-error
                 if (appCheckError.message.includes('reCAPTCHA error') || (appCheckError as any).code === 'appCheck/recaptcha-error') {
                     console.error(
-                        "Hint (appCheck/recaptcha-error): This error typically indicates a configuration problem. Check the following:\n" +
-                        "1. Is the correct reCAPTCHA Enterprise Site Key in your NEXT_PUBLIC_FIREBASE_RECAPTCHA_ENTERPRISE_SITE_KEY environment variable?\n" +
-                        "2. Is your application's domain (e.g., http://localhost:xxxx or your deployed URL) listed as an authorized domain in the Google Cloud Console for this reCAPTCHA key?\n" +
-                        "3. Is the reCAPTCHA Enterprise API enabled in your Google Cloud project?\n" +
-                        "4. Is App Check correctly configured and linked to this key in the Firebase Console (Project Settings -> App Check)?\n" +
-                        "5. Are there any network issues (firewalls, proxies) blocking connection to Google services?"
+                        "Hint (appCheck/recaptcha-error): This error strongly suggests a configuration problem. Please verify the following:\n" +
+                        "1. **Domain Authorization:** Is your application's domain (e.g., 'localhost' or your deployed URL like 'your-app.web.app') *explicitly* listed as an authorized domain in the **Google Cloud Console** for this specific reCAPTCHA Enterprise key? This is a common oversight.\n" +
+                        "2. **Correct Site Key:** Is the `NEXT_PUBLIC_FIREBASE_RECAPTCHA_ENTERPRISE_SITE_KEY` environment variable set correctly with the key from Google Cloud?\n" +
+                        "3. **API Enabled:** Is the 'reCAPTCHA Enterprise API' enabled in your Google Cloud project?\n" +
+                        "4. **Firebase App Check Link:** Is App Check correctly configured and linked to this ReCaptcha Enterprise key in the Firebase Console (Project Settings -> App Check)?\n" +
+                        "5. **Network Issues:** Are there any network issues (firewalls, browser extensions like ad blockers) blocking connections to Google services (e.g., google.com, gstatic.com)?"
                     );
                 } else if (appCheckError.message.includes('fetch') || appCheckError.message.includes('NetworkError')) {
                     console.error("Hint: A network error occurred during App Check setup. Check internet connection and ensure firewall/proxy settings allow access to Google services (e.g., googleapis.com, gstatic.com).");
@@ -135,3 +134,4 @@ console.log(`Initialization Status - Firebase Core: ${appInitialized}, App Check
 
 // Export appCheckInitialized status so components can check it
 export { app, appInitialized, appCheckInitialized };
+
