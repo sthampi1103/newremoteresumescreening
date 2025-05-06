@@ -148,8 +148,27 @@ const FormMessage = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField()
   // const body = error ? String(error?.message ?? "") : children
-  const body = typeof error === 'string' ? error : String(error?.message ?? "")
+  //const body = typeof error === 'string' ? error : String(error?.message ?? "")
 
+  let body = children; // Use children by default
+
+  if (error) {
+    if (typeof error === 'string') {
+        body = error;
+      } else if (error instanceof Error) {
+        body = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+          // Add more specific handling for known error object structures
+          // For example, if using a validation library with a specific error format:
+          // if (error.message) {
+          //   body = error.message;
+          // } else if (error.details && error.details.message) {
+          //   body = error.details.message;
+          // } else {
+            // Fallback for unexpected object structures - serialize the object
+            body = JSON.stringify(error);
+          // }
+      }
   if (!body) {
     return null
   }
