@@ -150,16 +150,36 @@ const FormMessage = React.forwardRef<
   let body = children
 
   if (error) {
-    if (typeof error === "string") {
-      body = error
-    } else if (error instanceof Error) {
-      body = error.message
-    } else if (typeof error === "object" && error !== null) {
-      // Attempt to access common message properties
-      if (error.message) {
-        body = error.message
-      } else if (error.details && error.details.message) {
-        body = error.details.message
+    const extractMessage = (err: unknown): string | null => {
+        if (typeof err === "string") {
+            return err;
+        } else if (err instanceof Error) {
+            return err.message;
+        } else if (typeof err === "object" && err !== null) {
+            // Check for common error message properties
+            if ("message" in err && typeof err.message === "string") {
+                return err.message;
+            } else if ("error" in err) {
+                const nestedError = err.error;
+                if (typeof nestedError === 'object' && nestedError !== null) {
+                    if ('message' in nestedError && typeof nestedError.message === 'string') {
+                        return nestedError.message
+                    }
+                }
+              if(typeof nestedError === "string") {
+                return nestedError
+              }
+            }else if ('details' in err && typeof err.details === 'object' && err.details !== null && 'message' in err.details && typeof err.details.message === 'string'){
+                return err.details.message;
+            }else{
+                return null
+            }
+        }
+        return null;
+    };
+    body = extractMessage(error)
+    if(body === null) {
+        if(typeof error === 'object' && error !== null) {
       } else {
         // Fallback to JSON stringify for other objects
         body = JSON.stringify(error)
